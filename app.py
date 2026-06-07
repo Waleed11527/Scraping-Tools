@@ -1803,6 +1803,8 @@ class AppHandler(BaseHTTPRequestHandler):
         raw = path.read_bytes()
         self.send_response(200)
         self.send_header("Content-Type", content_type)
+        if path.suffix.lower() in {".html", ".js", ".css"}:
+            self.send_header("Cache-Control", "no-store, max-age=0")
         if attachment_name:
             self.send_header("Content-Disposition", f'attachment; filename="{attachment_name}"')
         self.send_header("Content-Length", str(len(raw)))
