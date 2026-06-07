@@ -47,6 +47,20 @@ input {
   gap: 20px;
 }
 
+.brandIntro {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  min-width: 0;
+}
+
+.brandLogo {
+  width: 76px;
+  height: 76px;
+  flex: 0 0 auto;
+  object-fit: contain;
+}
+
 .eyebrow {
   margin: 0 0 8px;
   color: var(--accent);
@@ -431,6 +445,15 @@ td img {
 
   .topbar {
     align-items: start;
+  }
+
+  .brandIntro {
+    gap: 10px;
+  }
+
+  .brandLogo {
+    width: 48px;
+    height: 48px;
   }
 
   .urlBar {

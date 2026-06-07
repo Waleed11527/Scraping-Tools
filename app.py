@@ -1667,7 +1667,14 @@ class AppHandler(BaseHTTPRequestHandler):
             return self.send_json(job)
         if path.startswith("/static/"):
             file_path = STATIC_DIR / path.removeprefix("/static/")
-            content_type = "text/css" if file_path.suffix == ".css" else "application/javascript"
+            content_types = {
+                ".css": "text/css; charset=utf-8",
+                ".js": "application/javascript; charset=utf-8",
+                ".png": "image/png",
+                ".webp": "image/webp",
+                ".svg": "image/svg+xml",
+            }
+            content_type = content_types.get(file_path.suffix.lower(), "application/octet-stream")
             return self.serve_file(file_path, content_type)
         if path.startswith("/exports/"):
             file_path = EXPORT_DIR / path.removeprefix("/exports/")

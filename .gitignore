@@ -4,3 +4,5 @@ __pycache__/
 .DS_Store
 .env
 .env.*
+static/assets/*-source.png
+static/assets/scraper-logo.png
