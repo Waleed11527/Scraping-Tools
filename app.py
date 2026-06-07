@@ -29,10 +29,15 @@ PORT = int(os.environ.get("PORT", "8787"))
 HOST = os.environ.get("HOST", "0.0.0.0")
 STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")
 BILLING_SECRET = os.environ.get("BILLING_SECRET", "")
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
+GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
+AUTH_SECRET = os.environ.get("AUTH_SECRET", "")
 FREE_ITEM_LIMIT = 50
 PLAN_PRICES = {"category": 500, "pro": 1000}
 PLAN_LABELS = {"free": "Free", "category": "Category", "pro": "Full Access"}
 ACCESS_COOKIE = "scraper_access"
+SESSION_COOKIE = "scraper_session"
+OAUTH_STATE_COOKIE = "scraper_oauth_state"
 MAX_HTML_BYTES = 5_000_000
 MAX_DETAIL_PAGES = 250
 MAX_SALLA_PRODUCTS = 500
@@ -220,38 +225,67 @@ def create_scrape_job(url, mode="auto", plan="free"):
     return job_id
 
 
-def access_signing_secret():
-    return (BILLING_SECRET or STRIPE_SECRET_KEY).encode("utf-8")
+def signing_secret():
+    return (AUTH_SECRET or BILLING_SECRET or STRIPE_SECRET_KEY).encode("utf-8")
 
 
-def encode_access_cookie(plan):
-    secret = access_signing_secret()
+def encode_signed_payload(payload):
+    secret = signing_secret()
     if not secret:
-        raise ValueError("Paid access is not configured yet.")
-    payload = json.dumps(
-        {"plan": plan, "issued_at": int(time.time())},
-        separators=(",", ":"),
-    ).encode("utf-8")
-    encoded = base64.urlsafe_b64encode(payload).decode("ascii").rstrip("=")
+        raise ValueError("Authentication is not configured yet. Add AUTH_SECRET in Railway Variables.")
+    raw = json.dumps(payload, separators=(",", ":")).encode("utf-8")
+    encoded = base64.urlsafe_b64encode(raw).decode("ascii").rstrip("=")
     signature = hmac.new(secret, encoded.encode("ascii"), hashlib.sha256).hexdigest()
     return f"{encoded}.{signature}"
 
 
-def decode_access_cookie(value):
-    secret = access_signing_secret()
+def decode_signed_payload(value):
+    secret = signing_secret()
     if not value or not secret or "." not in value:
-        return "free"
+        return {}
     encoded, signature = value.rsplit(".", 1)
     expected = hmac.new(secret, encoded.encode("ascii"), hashlib.sha256).hexdigest()
     if not hmac.compare_digest(signature, expected):
-        return "free"
+        return {}
     try:
         padding = "=" * (-len(encoded) % 4)
         payload = json.loads(base64.urlsafe_b64decode(encoded + padding))
-        plan = payload.get("plan", "free")
-        return plan if plan in PLAN_LABELS else "free"
+        return payload if isinstance(payload, dict) else {}
     except (ValueError, json.JSONDecodeError):
-        return "free"
+        return {}
+
+
+def encode_access_cookie(plan, email):
+    return encode_signed_payload(
+        {"plan": plan, "email": email, "issued_at": int(time.time())}
+    )
+
+
+def encode_session_cookie(user):
+    return encode_signed_payload(
+        {
+            "sub": user.get("sub", ""),
+            "email": user.get("email", ""),
+            "name": user.get("name", ""),
+            "picture": user.get("picture", ""),
+            "issued_at": int(time.time()),
+        }
+    )
+
+
+def oauth_request(url, fields=None, access_token=""):
+    body = urllib.parse.urlencode(fields).encode("utf-8") if fields is not None else None
+    headers = {"User-Agent": USER_AGENT}
+    if fields is not None:
+        headers["Content-Type"] = "application/x-www-form-urlencoded"
+    if access_token:
+        headers["Authorization"] = f"Bearer {access_token}"
+    request = urllib.request.Request(url, data=body, headers=headers)
+    try:
+        with urllib.request.urlopen(request, timeout=30) as response:
+            return json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        raise ValueError("Google sign-in could not be completed.") from exc
 
 
 def apply_plan_limit(data, plan):
@@ -1633,6 +1667,17 @@ class AppHandler(BaseHTTPRequestHandler):
         path = parsed.path
         if path == "/health":
             return self.send_json({"status": "ok"})
+        if path == "/api/me":
+            user = self.current_user()
+            return self.send_json(
+                {
+                    "authenticated": bool(user),
+                    "user": user,
+                    "google_configured": bool(
+                        GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET and signing_secret()
+                    ),
+                }
+            )
         if path == "/api/plan":
             plan = self.current_plan()
             return self.send_json(
@@ -1640,10 +1685,75 @@ class AppHandler(BaseHTTPRequestHandler):
                     "plan": plan,
                     "label": PLAN_LABELS[plan],
                     "free_item_limit": FREE_ITEM_LIMIT,
-                    "payments_configured": bool(STRIPE_SECRET_KEY and access_signing_secret()),
+                    "payments_configured": bool(STRIPE_SECRET_KEY and signing_secret()),
                 }
             )
+        if path == "/auth/google":
+            if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET or not signing_secret():
+                return self.redirect("/?auth=not-configured")
+            state = uuid.uuid4().hex
+            params = {
+                "client_id": GOOGLE_CLIENT_ID,
+                "redirect_uri": f"{self.public_origin()}/auth/google/callback",
+                "response_type": "code",
+                "scope": "openid email profile",
+                "state": state,
+                "prompt": "select_account",
+            }
+            return self.redirect(
+                f"https://accounts.google.com/o/oauth2/v2/auth?{urllib.parse.urlencode(params)}",
+                cookie=self.cookie_header(
+                    OAUTH_STATE_COOKIE,
+                    encode_signed_payload({"state": state, "issued_at": int(time.time())}),
+                    600,
+                ),
+            )
+        if path == "/auth/google/callback":
+            params = urllib.parse.parse_qs(parsed.query)
+            code = (params.get("code") or [""])[0]
+            state = (params.get("state") or [""])[0]
+            state_payload = decode_signed_payload(self.cookies().get(OAUTH_STATE_COOKIE, ""))
+            if not code or not state or state != state_payload.get("state"):
+                return self.redirect("/?auth=failed")
+            issued_at = int(state_payload.get("issued_at", 0))
+            if time.time() - issued_at > 600:
+                return self.redirect("/?auth=expired")
+            try:
+                token = oauth_request(
+                    "https://oauth2.googleapis.com/token",
+                    {
+                        "code": code,
+                        "client_id": GOOGLE_CLIENT_ID,
+                        "client_secret": GOOGLE_CLIENT_SECRET,
+                        "redirect_uri": f"{self.public_origin()}/auth/google/callback",
+                        "grant_type": "authorization_code",
+                    },
+                )
+                user = oauth_request(
+                    "https://openidconnect.googleapis.com/v1/userinfo",
+                    access_token=token.get("access_token", ""),
+                )
+            except ValueError:
+                return self.redirect("/?auth=failed")
+            if not user.get("email") or not user.get("email_verified"):
+                return self.redirect("/?auth=unverified")
+            return self.redirect(
+                "/?auth=success",
+                cookie=self.cookie_header(
+                    SESSION_COOKIE,
+                    encode_session_cookie(user),
+                    60 * 60 * 24 * 30,
+                ),
+            )
+        if path == "/auth/logout":
+            return self.redirect(
+                "/?auth=logged-out",
+                cookie=self.cookie_header(SESSION_COOKIE, "", 0),
+            )
         if path == "/billing/success":
+            user = self.require_user(redirect=True)
+            if not user:
+                return
             session_id = (urllib.parse.parse_qs(parsed.query).get("session_id") or [""])[0]
             if not session_id:
                 return self.redirect("/?payment=missing")
@@ -1651,14 +1761,19 @@ class AppHandler(BaseHTTPRequestHandler):
             plan = (session.get("metadata") or {}).get("plan")
             if session.get("payment_status") != "paid" or plan not in {"category", "pro"}:
                 return self.redirect("/?payment=unconfirmed")
-            cookie = encode_access_cookie(plan)
+            session_email = (session.get("metadata") or {}).get("email")
+            if session_email != user.get("email"):
+                return self.redirect("/?payment=unconfirmed")
+            cookie = encode_access_cookie(plan, user.get("email"))
             return self.redirect(
                 f"/?payment=success&plan={urllib.parse.quote(plan)}",
-                cookie=f"{ACCESS_COOKIE}={cookie}; Path=/; Max-Age=31536000; HttpOnly; Secure; SameSite=Lax",
+                cookie=self.cookie_header(ACCESS_COOKIE, cookie, 31536000),
             )
         if path == "/":
             return self.serve_file(STATIC_DIR / "index.html", "text/html; charset=utf-8")
         if path == "/api/job":
+            if not self.require_user():
+                return
             params = urllib.parse.parse_qs(parsed.query)
             job_id = (params.get("id") or [""])[0]
             job = get_job(job_id)
@@ -1677,6 +1792,8 @@ class AppHandler(BaseHTTPRequestHandler):
             content_type = content_types.get(file_path.suffix.lower(), "application/octet-stream")
             return self.serve_file(file_path, content_type)
         if path.startswith("/exports/"):
+            if not self.require_user():
+                return
             file_path = EXPORT_DIR / path.removeprefix("/exports/")
             return self.serve_file(
                 file_path,
@@ -1688,6 +1805,8 @@ class AppHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         try:
             if self.path == "/api/scrape":
+                if not self.require_user():
+                    return
                 payload = self.read_json()
                 job_id = create_scrape_job(
                     payload.get("url", ""),
@@ -1702,6 +1821,9 @@ class AppHandler(BaseHTTPRequestHandler):
                     }
                 )
             if self.path == "/api/checkout":
+                user = self.require_user()
+                if not user:
+                    return
                 payload = self.read_json()
                 plan = payload.get("plan")
                 if plan not in {"category", "pro"}:
@@ -1721,10 +1843,14 @@ class AppHandler(BaseHTTPRequestHandler):
                             "Category Scraping Access" if plan == "category" else "Full Website Scraping Access"
                         ),
                         "metadata[plan]": plan,
+                        "metadata[email]": user.get("email"),
+                        "customer_email": user.get("email"),
                     },
                 )
                 return self.send_json({"checkout_url": session.get("url")})
             if self.path == "/api/download":
+                if not self.require_user():
+                    return
                 payload = self.read_json()
                 data = self.export_data_for_plan(payload.get("data", {}))
                 filename, path = save_xlsx_export(data)
@@ -1740,6 +1866,8 @@ class AppHandler(BaseHTTPRequestHandler):
                 self.wfile.write(workbook)
                 return
             if self.path == "/api/export":
+                if not self.require_user():
+                    return
                 payload = self.read_json()
                 filename, path = save_xlsx_export(self.export_data_for_plan(payload.get("data", {})))
                 return self.send_json(
@@ -1769,12 +1897,45 @@ class AppHandler(BaseHTTPRequestHandler):
         self.wfile.write(raw)
 
     def current_plan(self):
+        user = self.current_user()
+        if not user:
+            return "free"
+        access = decode_signed_payload(self.cookies().get(ACCESS_COOKIE, ""))
+        plan = access.get("plan", "free")
+        if access.get("email") != user.get("email") or plan not in PLAN_LABELS:
+            return "free"
+        return plan
+
+    def cookies(self):
         cookies = {}
         for part in self.headers.get("Cookie", "").split(";"):
             if "=" in part:
                 key, value = part.strip().split("=", 1)
                 cookies[key] = value
-        return decode_access_cookie(cookies.get(ACCESS_COOKIE, ""))
+        return cookies
+
+    def current_user(self):
+        user = decode_signed_payload(self.cookies().get(SESSION_COOKIE, ""))
+        if not user.get("email") or not user.get("sub"):
+            return None
+        issued_at = int(user.get("issued_at", 0))
+        if not issued_at or time.time() - issued_at > 60 * 60 * 24 * 30:
+            return None
+        return {
+            "email": user.get("email"),
+            "name": user.get("name") or user.get("email"),
+            "picture": user.get("picture", ""),
+        }
+
+    def require_user(self, redirect=False):
+        user = self.current_user()
+        if user:
+            return user
+        if redirect:
+            self.redirect("/?auth=required")
+        else:
+            self.send_json({"error": "Please sign in with Google to continue.", "auth_required": True}, 401)
+        return None
 
     def public_origin(self):
         proto = self.headers.get("X-Forwarded-Proto", "http").split(",")[0].strip()
@@ -1789,11 +1950,20 @@ class AppHandler(BaseHTTPRequestHandler):
             raise ValueError("The $5 Category plan can only export Single Category results.")
         return apply_plan_limit(data, plan)
 
-    def redirect(self, location, cookie=None):
+    def cookie_header(self, name, value, max_age):
+        secure = "; Secure" if self.public_origin().startswith("https://") else ""
+        return (
+            f"{name}={value}; Path=/; Max-Age={max_age}; HttpOnly; "
+            f"SameSite=Lax{secure}"
+        )
+
+    def redirect(self, location, cookie=None, cookies=None):
         self.send_response(302)
         self.send_header("Location", location)
         if cookie:
             self.send_header("Set-Cookie", cookie)
+        for item in cookies or []:
+            self.send_header("Set-Cookie", item)
         self.end_headers()
 
     def serve_file(self, path, content_type, attachment_name=None):
