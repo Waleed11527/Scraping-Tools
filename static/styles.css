@@ -253,10 +253,20 @@ button:disabled {
   place-items: center;
   padding: 20px;
   background: rgba(23, 32, 27, 0.62);
+  opacity: 0;
+  backdrop-filter: blur(0);
+  transition:
+    opacity 220ms ease,
+    backdrop-filter 220ms ease;
 }
 
 .modalBackdrop[hidden] {
   display: none;
+}
+
+.modalBackdrop.isVisible {
+  opacity: 1;
+  backdrop-filter: blur(5px);
 }
 
 .authModal {
@@ -267,11 +277,27 @@ button:disabled {
   background: var(--panel);
   box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
   text-align: center;
+  opacity: 0;
+  transform: translateY(24px) scale(0.94);
+  transition:
+    opacity 240ms ease,
+    transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.modalBackdrop.isVisible .authModal {
+  opacity: 1;
+  transform: translateY(0) scale(1);
 }
 
 .authModal > img {
   width: 72px;
   height: 72px;
+  transform: translateY(8px) rotate(-4deg);
+  transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1) 80ms;
+}
+
+.modalBackdrop.isVisible .authModal > img {
+  transform: translateY(0) rotate(0);
 }
 
 .authModal h2 {
@@ -319,12 +345,23 @@ button:disabled {
 
 .googleButton:hover {
   background: #f2f5f3;
+  border-color: #9eaaa4;
+  transform: translateY(-1px);
 }
 
 .googleMark {
   color: #4285f4;
   font-size: 20px;
   font-weight: 900;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modalBackdrop,
+  .authModal,
+  .authModal > img,
+  .googleButton {
+    transition: none;
+  }
 }
 
 .status {

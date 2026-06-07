@@ -17,6 +17,7 @@ let accountPlan = "free";
 let currentUser = null;
 let activeTab = "listings";
 let activeScrapeToken = 0;
+let authCloseTimer = null;
 const sslFallbackWarning =
   /The HTTPS certificate could not be verified by this Python installation,?\s*so the page was fetched with relaxed certificate checking\.?/gi;
 
@@ -70,13 +71,21 @@ function clearExportResult() {
 }
 
 function showAuthModal() {
+  window.clearTimeout(authCloseTimer);
   authModal.hidden = false;
   document.body.classList.add("modalOpen");
+  window.requestAnimationFrame(() => {
+    authModal.classList.add("isVisible");
+    closeAuthModal.focus();
+  });
 }
 
 function hideAuthModal() {
-  authModal.hidden = true;
+  authModal.classList.remove("isVisible");
   document.body.classList.remove("modalOpen");
+  authCloseTimer = window.setTimeout(() => {
+    authModal.hidden = true;
+  }, 260);
 }
 
 async function loadUser() {
@@ -103,6 +112,9 @@ accountButton.addEventListener("click", () => {
 closeAuthModal.addEventListener("click", hideAuthModal);
 authModal.addEventListener("click", (event) => {
   if (event.target === authModal) hideAuthModal();
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !authModal.hidden) hideAuthModal();
 });
 
 function setCounts(data) {
