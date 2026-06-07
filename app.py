@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import base64
 import concurrent.futures
+import hashlib
+import hmac
 import io
 import json
 import os
@@ -25,6 +27,12 @@ STATIC_DIR = ROOT / "static"
 EXPORT_DIR = ROOT / "exports"
 PORT = int(os.environ.get("PORT", "8787"))
 HOST = os.environ.get("HOST", "0.0.0.0")
+STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")
+BILLING_SECRET = os.environ.get("BILLING_SECRET", "")
+FREE_ITEM_LIMIT = 50
+PLAN_PRICES = {"category": 500, "pro": 1000}
+PLAN_LABELS = {"free": "Free", "category": "Category", "pro": "Full Access"}
+ACCESS_COOKIE = "scraper_access"
 MAX_HTML_BYTES = 5_000_000
 MAX_DETAIL_PAGES = 250
 MAX_SALLA_PRODUCTS = 500
@@ -178,9 +186,11 @@ def update_job(job_id, **updates):
         job["updated_at"] = time.time()
 
 
-def create_scrape_job(url, mode="auto"):
+def create_scrape_job(url, mode="auto", plan="free"):
     if mode not in {"auto", "website", "category"}:
         raise ValueError("Invalid scrape mode.")
+    if plan == "category" and mode != "category":
+        raise ValueError("The $5 Category plan only supports Single Category scraping.")
     job_id = str(uuid.uuid4())
     with JOBS_LOCK:
         JOBS[job_id] = {
@@ -201,12 +211,104 @@ def create_scrape_job(url, mode="auto"):
         try:
             progress("Starting scrape...")
             data = extract_site_data(url, progress=progress, mode=mode)
+            data = apply_plan_limit(data, plan)
             update_job(job_id, status="complete", message="Scrape complete.", data=data, counts=data.get("counts", {}))
         except Exception as exc:
             update_job(job_id, status="error", message=str(exc), error=str(exc))
 
     threading.Thread(target=run, daemon=True).start()
     return job_id
+
+
+def access_signing_secret():
+    return (BILLING_SECRET or STRIPE_SECRET_KEY).encode("utf-8")
+
+
+def encode_access_cookie(plan):
+    secret = access_signing_secret()
+    if not secret:
+        raise ValueError("Paid access is not configured yet.")
+    payload = json.dumps(
+        {"plan": plan, "issued_at": int(time.time())},
+        separators=(",", ":"),
+    ).encode("utf-8")
+    encoded = base64.urlsafe_b64encode(payload).decode("ascii").rstrip("=")
+    signature = hmac.new(secret, encoded.encode("ascii"), hashlib.sha256).hexdigest()
+    return f"{encoded}.{signature}"
+
+
+def decode_access_cookie(value):
+    secret = access_signing_secret()
+    if not value or not secret or "." not in value:
+        return "free"
+    encoded, signature = value.rsplit(".", 1)
+    expected = hmac.new(secret, encoded.encode("ascii"), hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(signature, expected):
+        return "free"
+    try:
+        padding = "=" * (-len(encoded) % 4)
+        payload = json.loads(base64.urlsafe_b64decode(encoded + padding))
+        plan = payload.get("plan", "free")
+        return plan if plan in PLAN_LABELS else "free"
+    except (ValueError, json.JSONDecodeError):
+        return "free"
+
+
+def apply_plan_limit(data, plan):
+    if plan != "free":
+        data["plan"] = plan
+        return data
+    listings = list(data.get("listings", []))
+    truncated = len(listings) > FREE_ITEM_LIMIT
+    data["listings"] = listings[:FREE_ITEM_LIMIT]
+    product_images = []
+    seen_images = set()
+    for listing in data["listings"]:
+        for image_url in (listing.get("all_images") or listing.get("image") or "").split(" | "):
+            if not image_url or image_url in seen_images:
+                continue
+            seen_images.add(image_url)
+            product_images.append(
+                {"src": image_url, "alt": listing.get("title", ""), "title": listing.get("title", "")}
+            )
+    if product_images:
+        data["images"] = product_images
+    counts = data.setdefault("counts", {})
+    counts["listings"] = len(data["listings"])
+    counts["model_numbers"] = sum(1 for row in data["listings"] if row.get("model_number"))
+    counts["detail_pages"] = min(counts.get("detail_pages", 0), len(data["listings"]))
+    counts["images"] = len(data.get("images", []))
+    data["plan"] = "free"
+    data["free_limit"] = FREE_ITEM_LIMIT
+    if truncated:
+        notice = f"Free plan includes the first {FREE_ITEM_LIMIT} listings. Upgrade to export the complete result."
+        data["warning"] = sanitize_warning(" ".join(filter(None, [data.get("warning"), notice])))
+    return data
+
+
+def stripe_request(method, path, fields=None):
+    if not STRIPE_SECRET_KEY:
+        raise ValueError("Payments are not configured yet. Add STRIPE_SECRET_KEY in Railway Variables.")
+    body = urllib.parse.urlencode(fields or {}, doseq=True).encode("utf-8") if fields is not None else None
+    request = urllib.request.Request(
+        f"https://api.stripe.com{path}",
+        data=body,
+        method=method,
+        headers={
+            "Authorization": f"Bearer {STRIPE_SECRET_KEY}",
+            "Content-Type": "application/x-www-form-urlencoded",
+            "User-Agent": USER_AGENT,
+        },
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=30) as response:
+            return json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        try:
+            detail = json.loads(exc.read().decode("utf-8")).get("error", {}).get("message")
+        except (ValueError, json.JSONDecodeError):
+            detail = ""
+        raise ValueError(detail or "Stripe could not process the payment request.") from exc
 
 
 def get_job(job_id):
@@ -1531,6 +1633,29 @@ class AppHandler(BaseHTTPRequestHandler):
         path = parsed.path
         if path == "/health":
             return self.send_json({"status": "ok"})
+        if path == "/api/plan":
+            plan = self.current_plan()
+            return self.send_json(
+                {
+                    "plan": plan,
+                    "label": PLAN_LABELS[plan],
+                    "free_item_limit": FREE_ITEM_LIMIT,
+                    "payments_configured": bool(STRIPE_SECRET_KEY and access_signing_secret()),
+                }
+            )
+        if path == "/billing/success":
+            session_id = (urllib.parse.parse_qs(parsed.query).get("session_id") or [""])[0]
+            if not session_id:
+                return self.redirect("/?payment=missing")
+            session = stripe_request("GET", f"/v1/checkout/sessions/{urllib.parse.quote(session_id)}")
+            plan = (session.get("metadata") or {}).get("plan")
+            if session.get("payment_status") != "paid" or plan not in {"category", "pro"}:
+                return self.redirect("/?payment=unconfirmed")
+            cookie = encode_access_cookie(plan)
+            return self.redirect(
+                f"/?payment=success&plan={urllib.parse.quote(plan)}",
+                cookie=f"{ACCESS_COOKIE}={cookie}; Path=/; Max-Age=31536000; HttpOnly; Secure; SameSite=Lax",
+            )
         if path == "/":
             return self.serve_file(STATIC_DIR / "index.html", "text/html; charset=utf-8")
         if path == "/api/job":
@@ -1557,7 +1682,11 @@ class AppHandler(BaseHTTPRequestHandler):
         try:
             if self.path == "/api/scrape":
                 payload = self.read_json()
-                job_id = create_scrape_job(payload.get("url", ""), payload.get("mode", "auto"))
+                job_id = create_scrape_job(
+                    payload.get("url", ""),
+                    payload.get("mode", "auto"),
+                    self.current_plan(),
+                )
                 return self.send_json(
                     {
                         "job_id": job_id,
@@ -1565,9 +1694,32 @@ class AppHandler(BaseHTTPRequestHandler):
                         "message": "Scrape started. The app will update progress here.",
                     }
                 )
+            if self.path == "/api/checkout":
+                payload = self.read_json()
+                plan = payload.get("plan")
+                if plan not in {"category", "pro"}:
+                    raise ValueError("Choose a valid paid plan.")
+                origin = self.public_origin()
+                session = stripe_request(
+                    "POST",
+                    "/v1/checkout/sessions",
+                    {
+                        "mode": "payment",
+                        "success_url": f"{origin}/billing/success?session_id={{CHECKOUT_SESSION_ID}}",
+                        "cancel_url": f"{origin}/?payment=cancelled",
+                        "line_items[0][quantity]": "1",
+                        "line_items[0][price_data][currency]": "usd",
+                        "line_items[0][price_data][unit_amount]": str(PLAN_PRICES[plan]),
+                        "line_items[0][price_data][product_data][name]": (
+                            "Category Scraping Access" if plan == "category" else "Full Website Scraping Access"
+                        ),
+                        "metadata[plan]": plan,
+                    },
+                )
+                return self.send_json({"checkout_url": session.get("url")})
             if self.path == "/api/download":
                 payload = self.read_json()
-                data = payload.get("data", {})
+                data = self.export_data_for_plan(payload.get("data", {}))
                 filename, path = save_xlsx_export(data)
                 workbook = path.read_bytes()
                 self.send_response(200)
@@ -1582,7 +1734,7 @@ class AppHandler(BaseHTTPRequestHandler):
                 return
             if self.path == "/api/export":
                 payload = self.read_json()
-                filename, path = save_xlsx_export(payload.get("data", {}))
+                filename, path = save_xlsx_export(self.export_data_for_plan(payload.get("data", {})))
                 return self.send_json(
                     {
                         "filename": filename,
@@ -1608,6 +1760,34 @@ class AppHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(raw)))
         self.end_headers()
         self.wfile.write(raw)
+
+    def current_plan(self):
+        cookies = {}
+        for part in self.headers.get("Cookie", "").split(";"):
+            if "=" in part:
+                key, value = part.strip().split("=", 1)
+                cookies[key] = value
+        return decode_access_cookie(cookies.get(ACCESS_COOKIE, ""))
+
+    def public_origin(self):
+        proto = self.headers.get("X-Forwarded-Proto", "http").split(",")[0].strip()
+        host = self.headers.get("X-Forwarded-Host") or self.headers.get("Host")
+        return f"{proto}://{host}"
+
+    def export_data_for_plan(self, data):
+        if not isinstance(data, dict):
+            raise ValueError("Invalid export data.")
+        plan = self.current_plan()
+        if plan == "category" and data.get("scrape_mode") != "category":
+            raise ValueError("The $5 Category plan can only export Single Category results.")
+        return apply_plan_limit(data, plan)
+
+    def redirect(self, location, cookie=None):
+        self.send_response(302)
+        self.send_header("Location", location)
+        if cookie:
+            self.send_header("Set-Cookie", cookie)
+        self.end_headers()
 
     def serve_file(self, path, content_type, attachment_name=None):
         if not path.exists() or not path.is_file():

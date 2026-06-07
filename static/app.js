@@ -6,8 +6,11 @@ const exportResult = document.querySelector("#exportResult");
 const tabs = [...document.querySelectorAll(".tab")];
 const tableHead = document.querySelector("#tableHead");
 const tableBody = document.querySelector("#tableBody");
+const currentPlanEl = document.querySelector("#currentPlan");
+const upgradeButtons = [...document.querySelectorAll(".upgradeButton")];
 
 let scrapeData = null;
+let accountPlan = "free";
 let activeTab = "listings";
 let activeScrapeToken = 0;
 const sslFallbackWarning =
@@ -142,6 +145,44 @@ function finishedStatusText(data) {
   return `${captured}. Note: ${warning}`;
 }
 
+async function loadPlan() {
+  try {
+    const response = await fetch("/api/plan");
+    const account = await response.json();
+    accountPlan = account.plan || "free";
+    currentPlanEl.textContent = account.label || "Free";
+    upgradeButtons.forEach((button) => {
+      const selected = button.dataset.plan === accountPlan;
+      button.disabled = selected;
+      if (selected) button.textContent = "Current plan";
+    });
+  } catch {
+    currentPlanEl.textContent = "Free";
+  }
+}
+
+upgradeButtons.forEach((button) => {
+  button.addEventListener("click", async () => {
+    upgradeButtons.forEach((item) => { item.disabled = true; });
+    setStatus("Opening secure Stripe checkout...");
+    try {
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: button.dataset.plan }),
+      });
+      const result = await response.json();
+      if (!response.ok || result.error || !result.checkout_url) {
+        throw new Error(result.error || "Could not open checkout.");
+      }
+      window.location.href = result.checkout_url;
+    } catch (error) {
+      setStatus(error.message, true);
+      upgradeButtons.forEach((item) => { item.disabled = item.dataset.plan === accountPlan; });
+    }
+  });
+});
+
 async function pollScrapeJob(jobId, token) {
   while (true) {
     if (token !== activeScrapeToken) return null;
@@ -244,6 +285,16 @@ downloadButton.addEventListener("click", async () => {
 });
 
 renderTable();
+loadPlan();
+
+const paymentState = new URLSearchParams(window.location.search).get("payment");
+if (paymentState === "success") {
+  setStatus("Payment confirmed. Your plan is now active.");
+  history.replaceState({}, "", "/");
+} else if (paymentState === "cancelled") {
+  setStatus("Checkout cancelled. No payment was taken.");
+  history.replaceState({}, "", "/");
+}
 
 const tableWrap = document.querySelector(".tableWrap");
 let isDraggingTable = false;

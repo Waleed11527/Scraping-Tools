@@ -19,9 +19,32 @@
           </button>
         </header>
 
+        <section class="billingBar" aria-label="Plans">
+          <div class="planStatus">
+            <span>Current plan</span>
+            <strong id="currentPlan">Free</strong>
+          </div>
+          <div class="planOptions">
+            <div class="planOption">
+              <strong>Free</strong>
+              <span>Up to 50 listings</span>
+            </div>
+            <div class="planOption">
+              <strong>$5 Category</strong>
+              <span>Complete single-category scrape</span>
+              <button type="button" class="upgradeButton" data-plan="category">Choose Category</button>
+            </div>
+            <div class="planOption featured">
+              <strong>$10 Full Access</strong>
+              <span>Whole websites and categories</span>
+              <button type="button" class="upgradeButton" data-plan="pro">Choose Full Access</button>
+            </div>
+          </div>
+        </section>
+
         <section class="scrapeModes" aria-label="Scraping options">
           <section class="scrapeModePanel">
-            <h2>Overall Website</h2>
+            <div class="modeTitle"><h2>Overall Website</h2><span>$10 plan</span></div>
             <form class="urlBar scrapeForm" data-mode="website">
               <input
                 type="url"
@@ -36,7 +59,7 @@
           </section>
 
           <section class="scrapeModePanel">
-            <h2>Single Category</h2>
+            <div class="modeTitle"><h2>Single Category</h2><span>Free preview / $5 complete</span></div>
             <form class="urlBar scrapeForm" data-mode="category">
               <input
                 type="url"

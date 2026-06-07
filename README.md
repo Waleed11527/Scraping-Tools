@@ -20,7 +20,16 @@ http://127.0.0.1:8787
 2. Railway will read `railway.json` and run `python3 -u app.py`.
 3. Open the service's **Settings > Networking** and click **Generate Domain**.
 
-No custom environment variables are required. Railway provides `PORT` automatically.
+Railway provides `PORT` automatically. Configure these variables for paid plans:
+
+- `STRIPE_SECRET_KEY`: Stripe secret key used to create and verify Checkout sessions.
+- `BILLING_SECRET`: a long random secret used to sign paid-access cookies.
+
+The plan rules are enforced by the server:
+
+- Free: up to 50 listings from either scraping mode.
+- Category ($5 one-time): complete Single Category scrapes.
+- Full Access ($10 one-time): complete Overall Website and Single Category scrapes.
 
 ## What It Extracts
 
