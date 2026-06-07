@@ -8,13 +8,9 @@ const tableHead = document.querySelector("#tableHead");
 const tableBody = document.querySelector("#tableBody");
 const currentPlanEl = document.querySelector("#currentPlan");
 const upgradeButtons = [...document.querySelectorAll(".upgradeButton")];
-const accountButton = document.querySelector("#accountButton");
-const authModal = document.querySelector("#authModal");
-const closeAuthModal = document.querySelector("#closeAuthModal");
 
 let scrapeData = null;
 let accountPlan = "free";
-let currentUser = null;
 let activeTab = "listings";
 let activeScrapeToken = 0;
 const sslFallbackWarning =
@@ -68,42 +64,6 @@ function clearExportResult() {
   exportResult.hidden = true;
   exportResult.innerHTML = "";
 }
-
-function showAuthModal() {
-  authModal.hidden = false;
-  document.body.classList.add("modalOpen");
-}
-
-function hideAuthModal() {
-  authModal.hidden = true;
-  document.body.classList.remove("modalOpen");
-}
-
-async function loadUser() {
-  try {
-    const response = await fetch("/api/me");
-    const account = await response.json();
-    currentUser = account.authenticated ? account.user : null;
-    accountButton.textContent = currentUser ? currentUser.name : "Sign in";
-    accountButton.title = currentUser ? `${currentUser.email} — click to sign out` : "Log in or sign up";
-  } catch {
-    currentUser = null;
-    accountButton.textContent = "Sign in";
-  }
-}
-
-accountButton.addEventListener("click", () => {
-  if (currentUser) {
-    window.location.href = "/auth/logout";
-  } else {
-    showAuthModal();
-  }
-});
-
-closeAuthModal.addEventListener("click", hideAuthModal);
-authModal.addEventListener("click", (event) => {
-  if (event.target === authModal) hideAuthModal();
-});
 
 function setCounts(data) {
   document.querySelector("#listingCount").textContent = data?.counts?.listings ?? 0;
@@ -203,10 +163,6 @@ async function loadPlan() {
 
 upgradeButtons.forEach((button) => {
   button.addEventListener("click", async () => {
-    if (!currentUser) {
-      showAuthModal();
-      return;
-    }
     upgradeButtons.forEach((item) => { item.disabled = true; });
     setStatus("Opening secure Stripe checkout...");
     try {
@@ -253,28 +209,9 @@ tabs.forEach((tab) => {
   });
 });
 
-scrapeButtons.forEach((button) => {
-  button.addEventListener("click", (event) => {
-    if (!currentUser) {
-      event.preventDefault();
-      showAuthModal();
-    }
-  });
-});
-
 scrapeForms.forEach((form) => {
-  const urlInput = form.querySelector("input[name='url']");
-  urlInput.addEventListener("paste", () => {
-    window.setTimeout(() => {
-      if (!currentUser && urlInput.value.trim()) showAuthModal();
-    }, 0);
-  });
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
-    if (!currentUser) {
-      showAuthModal();
-      return;
-    }
     const scrapeToken = activeScrapeToken + 1;
     activeScrapeToken = scrapeToken;
     const mode = form.dataset.mode;
@@ -348,29 +285,14 @@ downloadButton.addEventListener("click", async () => {
 });
 
 renderTable();
-loadUser();
 loadPlan();
 
 const paymentState = new URLSearchParams(window.location.search).get("payment");
-const authState = new URLSearchParams(window.location.search).get("auth");
 if (paymentState === "success") {
   setStatus("Payment confirmed. Your plan is now active.");
   history.replaceState({}, "", "/");
 } else if (paymentState === "cancelled") {
   setStatus("Checkout cancelled. No payment was taken.");
-  history.replaceState({}, "", "/");
-}
-if (authState === "success") {
-  setStatus("Google sign-in complete. You can start scraping.");
-  history.replaceState({}, "", "/");
-} else if (authState === "not-configured") {
-  setStatus("Google sign-in is not configured yet.", true);
-  showAuthModal();
-} else if (authState && authState !== "logged-out") {
-  setStatus("Google sign-in could not be completed. Please try again.", true);
-  showAuthModal();
-} else if (authState === "logged-out") {
-  setStatus("You have been signed out.");
   history.replaceState({}, "", "/");
 }
 

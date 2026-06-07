@@ -25,18 +25,6 @@ Railway provides `PORT` automatically. Configure these variables for paid plans:
 - `STRIPE_SECRET_KEY`: Stripe secret key used to create and verify Checkout sessions.
 - `BILLING_SECRET`: a long random secret used to sign paid-access cookies.
 
-Configure these variables for Google login:
-
-- `GOOGLE_CLIENT_ID`: OAuth 2.0 web client ID from Google Cloud.
-- `GOOGLE_CLIENT_SECRET`: OAuth 2.0 web client secret from Google Cloud.
-- `AUTH_SECRET`: a long random secret used to sign login sessions.
-
-Add this authorized redirect URI to the Google OAuth web client:
-
-```text
-https://YOUR-RAILWAY-DOMAIN/auth/google/callback
-```
-
 The plan rules are enforced by the server:
 
 - Free: up to 50 listings from either scraping mode.

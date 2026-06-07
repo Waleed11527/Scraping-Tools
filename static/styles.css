@@ -47,27 +47,6 @@ input {
   gap: 20px;
 }
 
-.topActions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.accountButton {
-  min-height: 42px;
-  max-width: 190px;
-  padding: 0 14px;
-  overflow: hidden;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: var(--panel);
-  color: var(--ink);
-  font-weight: 700;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
 .brandIntro {
   display: flex;
   align-items: flex-start;
@@ -239,92 +218,6 @@ button:hover:not(:disabled) {
 button:disabled {
   cursor: not-allowed;
   opacity: 0.45;
-}
-
-.modalOpen {
-  overflow: hidden;
-}
-
-.modalBackdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 20;
-  display: grid;
-  place-items: center;
-  padding: 20px;
-  background: rgba(23, 32, 27, 0.62);
-}
-
-.modalBackdrop[hidden] {
-  display: none;
-}
-
-.authModal {
-  position: relative;
-  width: min(430px, 100%);
-  padding: 28px;
-  border-radius: 8px;
-  background: var(--panel);
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
-  text-align: center;
-}
-
-.authModal > img {
-  width: 72px;
-  height: 72px;
-}
-
-.authModal h2 {
-  margin: 0;
-  font-size: 26px;
-}
-
-.authModal p:not(.eyebrow) {
-  margin: 10px 0 20px;
-  color: var(--muted);
-}
-
-.authModal small {
-  display: block;
-  margin-top: 14px;
-  color: var(--muted);
-}
-
-.closeButton {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 36px;
-  height: 36px;
-  border: 0;
-  background: transparent;
-  color: var(--muted);
-  font-size: 26px;
-  cursor: pointer;
-}
-
-.googleButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  min-height: 48px;
-  border: 1px solid #cfd6d2;
-  border-radius: 6px;
-  background: #fff;
-  color: var(--ink);
-  font-weight: 800;
-  text-decoration: none;
-}
-
-.googleButton:hover {
-  background: #f2f5f3;
-}
-
-.googleMark {
-  color: #4285f4;
-  font-size: 20px;
-  font-weight: 900;
 }
 
 .status {
@@ -552,14 +445,6 @@ td img {
 
   .topbar {
     align-items: start;
-  }
-
-  .topActions {
-    flex-direction: column-reverse;
-  }
-
-  .accountButton {
-    max-width: 112px;
   }
 
   .brandIntro {
