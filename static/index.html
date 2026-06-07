@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Website Data Scraper</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="workspace">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Website Data Scraper</p>
+            <h1>Scrape a whole store or one category. Export everything to Excel.</h1>
+          </div>
+          <button id="downloadButton" class="iconButton" disabled title="Download Excel" aria-label="Download Excel">
+            <span aria-hidden="true">↓</span>
+          </button>
+        </header>
+
+        <section class="scrapeModes" aria-label="Scraping options">
+          <section class="scrapeModePanel">
+            <h2>Overall Website</h2>
+            <form class="urlBar scrapeForm" data-mode="website">
+              <input
+                type="url"
+                name="url"
+                aria-label="Overall website URL"
+                placeholder="https://example-store.com/"
+                autocomplete="url"
+                required
+              />
+              <button type="submit">Scrape Website</button>
+            </form>
+          </section>
+
+          <section class="scrapeModePanel">
+            <h2>Single Category</h2>
+            <form class="urlBar scrapeForm" data-mode="category">
+              <input
+                type="url"
+                name="url"
+                aria-label="Category URL"
+                placeholder="https://example-store.com/category/"
+                autocomplete="url"
+                required
+              />
+              <button type="submit">Scrape Category</button>
+            </form>
+          </section>
+        </section>
+
+        <div id="status" class="status" role="status">Ready</div>
+        <div id="exportResult" class="exportResult" hidden></div>
+
+        <section class="stats" aria-label="Scrape counts">
+          <div><span id="listingCount">0</span><small>Listings</small></div>
+          <div><span id="detailCount">0</span><small>Detail pages</small></div>
+          <div><span id="modelCount">0</span><small>Model numbers</small></div>
+          <div><span id="categoryCount">0</span><small>Categories</small></div>
+          <div><span id="apiPageCount">0</span><small>API pages</small></div>
+          <div><span id="imageCount">0</span><small>Images</small></div>
+          <div><span id="linkCount">0</span><small>Links</small></div>
+          <div><span id="metaCount">0</span><small>Metadata</small></div>
+        </section>
+
+        <nav class="tabs" aria-label="Data views">
+          <button class="tab active" data-tab="listings" type="button">Listings</button>
+          <button class="tab" data-tab="images" type="button">Images</button>
+          <button class="tab" data-tab="links" type="button">Links</button>
+          <button class="tab" data-tab="metadata" type="button">Metadata</button>
+        </nav>
+
+        <div class="scrollHint">Swipe or drag the table sideways</div>
+        <section class="tableWrap">
+          <table>
+            <thead id="tableHead"></thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </section>
+      </section>
+    </main>
+    <script src="/static/app.js"></script>
+  </body>
+</html>

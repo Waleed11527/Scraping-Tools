@@ -1,0 +1,32 @@
+# Website Data Scraper
+
+A small local web app for pasting a website link, extracting common listing data, and downloading the result as an Excel workbook.
+
+## Run
+
+```bash
+python3 app.py
+```
+
+Open:
+
+```text
+http://127.0.0.1:8787
+```
+
+## What It Extracts
+
+- Listing-like cards with title, price, image, URL, and description
+- Product detail pages for each same-site listing URL
+- Model number, SKU, MPN, brand, availability, detail price, and detail description where available
+- Salla homepages and category pages through the public storefront API, including category discovery and infinite-scroll products
+- Salla product API fields such as product ID, prices, category, stock flags, weight, GTIN, images, and raw product JSON
+- Shopify stores and collection pages through their public JSON feeds, including pagination, all product images, variants, SKUs, barcodes, prices, and raw product JSON
+- All page images
+- All page links
+- Metadata tags
+- JSON-LD structured data
+
+Some websites block automated scraping or render all listing data with JavaScript after the page loads. Salla storefront categories are handled with a dedicated API mode; other JavaScript-heavy sites may need a browser-based scraper upgrade.
+
+The app visits up to 250 product detail pages per generic scrape, up to 500 Salla API products per category, and up to 5000 Salla or Shopify products total to avoid accidentally hammering a website.
