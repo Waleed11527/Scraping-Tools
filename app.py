@@ -3,6 +3,7 @@ import base64
 import concurrent.futures
 import io
 import json
+import os
 import re
 import ssl
 import threading
@@ -22,7 +23,8 @@ from xml.sax.saxutils import escape as xml_escape
 ROOT = Path(__file__).parent
 STATIC_DIR = ROOT / "static"
 EXPORT_DIR = ROOT / "exports"
-PORT = 8787
+PORT = int(os.environ.get("PORT", "8787"))
+HOST = os.environ.get("HOST", "0.0.0.0")
 MAX_HTML_BYTES = 5_000_000
 MAX_DETAIL_PAGES = 250
 MAX_SALLA_PRODUCTS = 500
@@ -1527,6 +1529,8 @@ class AppHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
+        if path == "/health":
+            return self.send_json({"status": "ok"})
         if path == "/":
             return self.serve_file(STATIC_DIR / "index.html", "text/html; charset=utf-8")
         if path == "/api/job":
@@ -1623,6 +1627,6 @@ class AppHandler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    server = ThreadingHTTPServer(("127.0.0.1", PORT), AppHandler)
-    print(f"Website data scraper running at http://127.0.0.1:{PORT}")
+    server = ThreadingHTTPServer((HOST, PORT), AppHandler)
+    print(f"Website data scraper running on {HOST}:{PORT}")
     server.serve_forever()

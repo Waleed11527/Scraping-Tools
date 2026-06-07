@@ -14,6 +14,14 @@ Open:
 http://127.0.0.1:8787
 ```
 
+## Deploy On Railway
+
+1. Create a Railway service from the GitHub repository.
+2. Railway will read `railway.json` and run `python3 app.py`.
+3. Open the service's **Settings > Networking** and click **Generate Domain**.
+
+No custom environment variables are required. Railway provides `PORT` automatically.
+
 ## What It Extracts
 
 - Listing-like cards with title, price, image, URL, and description
