@@ -1431,6 +1431,49 @@ body.appBody {
   color: #fff;
 }
 
+.themeToggle {
+  position: relative;
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: rgba(24, 24, 31, 0.9);
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color 180ms ease, transform 180ms ease, background 180ms ease;
+}
+
+.themeToggle:hover {
+  border-color: var(--accent);
+  transform: rotate(12deg);
+}
+
+.themeIcon {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 17px;
+  transition: transform 220ms ease, opacity 220ms ease;
+}
+
+.darkIcon {
+  opacity: 0;
+  transform: translateY(16px);
+}
+
+.appBody[data-theme="dark"] .lightIcon {
+  opacity: 0;
+  transform: translateY(-16px);
+}
+
+.appBody[data-theme="dark"] .darkIcon {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .sidebarFoot {
   display: none;
 }
@@ -1931,4 +1974,156 @@ td a {
   .urlBar button {
     width: 100%;
   }
+}
+
+.appBody[data-theme="light"] {
+  --ink: #111118;
+  --muted: #62627a;
+  --line: rgba(17, 17, 24, 0.1);
+  --paper: #f7f8fb;
+  --panel: #ffffff;
+  --accent: #4f46e5;
+  --accent-dark: #4f46e5;
+  --warn: #e11d48;
+  --surface-2: #eef0f7;
+  --green: #059669;
+  --amber: #d97706;
+  --cyan: #0891b2;
+  --violet: #7c3aed;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 16% 0%, rgba(79, 70, 229, 0.14), transparent 32%),
+    radial-gradient(circle at 88% 12%, rgba(8, 145, 178, 0.1), transparent 30%),
+    linear-gradient(180deg, #fbfbff 0%, #f2f4fa 60%, #ffffff 100%);
+}
+
+.appBody[data-theme="light"]::before {
+  background-image:
+    linear-gradient(rgba(17, 17, 24, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(17, 17, 24, 0.045) 1px, transparent 1px);
+}
+
+.appBody[data-theme="light"] .sidebar {
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 10px 40px rgba(20, 20, 35, 0.06);
+}
+
+.appBody[data-theme="light"] .sidebarNav,
+.appBody[data-theme="light"] .themeToggle,
+.appBody[data-theme="light"] .accountButton,
+.appBody[data-theme="light"] .backButton,
+.appBody[data-theme="light"] .secondaryLink {
+  background: rgba(255, 255, 255, 0.86);
+  color: var(--ink);
+}
+
+.appBody[data-theme="light"] .sidebarNav a {
+  color: #66667c;
+}
+
+.appBody[data-theme="light"] .sidebarNav a:hover {
+  color: var(--ink);
+  background: #eef0f7;
+}
+
+.appBody[data-theme="light"] .sidebarNav a.active {
+  color: #fff;
+  background: var(--accent);
+}
+
+.appBody[data-theme="light"] .heroConsole,
+.appBody[data-theme="light"] .dashboardStats,
+.appBody[data-theme="light"] .workflowCard,
+.appBody[data-theme="light"] .dashboardBand,
+.appBody[data-theme="light"] .scraperCommand,
+.appBody[data-theme="light"] .statusBar,
+.appBody[data-theme="light"] .tableWrap,
+.appBody[data-theme="light"] .priceCard,
+.appBody[data-theme="light"] .accountContent,
+.appBody[data-theme="light"] .signedOutPanel,
+.appBody[data-theme="light"] .accountLoading,
+.appBody[data-theme="light"] .subscriptionPanel,
+.appBody[data-theme="light"] .accountIdentity,
+.appBody[data-theme="light"] .accountMetrics > div {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(247, 248, 253, 0.9)),
+    #fff;
+  color: var(--ink);
+  box-shadow: 0 20px 60px rgba(20, 20, 35, 0.08);
+}
+
+.appBody[data-theme="light"] .consoleChrome {
+  background: rgba(244, 246, 251, 0.92);
+}
+
+.appBody[data-theme="light"] .consoleMetric {
+  background: rgba(79, 70, 229, 0.08);
+}
+
+.appBody[data-theme="light"] .workflowCard {
+  background:
+    linear-gradient(135deg, rgba(79, 70, 229, 0.08), transparent 46%),
+    #fff;
+}
+
+.appBody[data-theme="light"] .scrapeTypeGrid article {
+  background:
+    radial-gradient(circle at 18% 0%, rgba(79, 70, 229, 0.12), transparent 36%),
+    rgba(255, 255, 255, 0.94);
+}
+
+.appBody[data-theme="light"] .dashboardBand {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(8, 145, 178, 0.12), transparent 40%),
+    rgba(79, 70, 229, 0.07);
+}
+
+.appBody[data-theme="light"] .scraperTypeStrip span,
+.appBody[data-theme="light"] .compactStats div,
+.appBody[data-theme="light"] .tab,
+.appBody[data-theme="light"] .scrollHint {
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--muted);
+}
+
+.appBody[data-theme="light"] .urlBar {
+  background: #ffffff;
+}
+
+.appBody[data-theme="light"] .urlBar input {
+  color: var(--ink);
+}
+
+.appBody[data-theme="light"] .urlBar input::placeholder {
+  color: #8c8c9f;
+}
+
+.appBody[data-theme="light"] .tab.active {
+  background: rgba(79, 70, 229, 0.1);
+  color: var(--accent);
+}
+
+.appBody[data-theme="light"] .tableWrap {
+  background: #ffffff;
+  scrollbar-color: var(--accent) #eef0f7;
+}
+
+.appBody[data-theme="light"] th {
+  background: #eef0f7;
+  color: var(--ink);
+}
+
+.appBody[data-theme="light"] td {
+  color: #4d4d61;
+}
+
+.appBody[data-theme="light"] .authModal {
+  background: #ffffff;
+  color: var(--ink);
+  box-shadow: 0 40px 120px rgba(20, 20, 35, 0.22);
+}
+
+.appBody[data-theme="light"] .googleButton {
+  background: #fff;
+  color: var(--ink);
 }

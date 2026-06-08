@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>My Account · DataScrape Pro</title>
     <link rel="icon" type="image/png" href="/static/assets/favicon.png" />
-    <link rel="stylesheet" href="/static/styles.css?v=20260608-pro-redesign" />
+    <link rel="stylesheet" href="/static/styles.css?v=20260608-theme" />
   </head>
-  <body class="appBody">
+  <body class="appBody" data-theme="light">
     <div class="appLayout">
       <aside class="sidebar">
         <a class="sidebarBrand" href="/"><img src="/static/assets/scraper-logo-512.png" alt="" /><span>DataScrape <em>Pro</em></span></a>
@@ -15,6 +15,10 @@
           <a href="/">Dashboard</a><a href="/website">Overall Website</a><a href="/category">Single Category</a>
           <a href="/pricing">Pricing</a><a class="active" href="/account">My Account</a>
         </nav>
+        <button id="themeToggle" class="themeToggle" type="button" aria-label="Switch to dark mode" title="Switch theme">
+          <span class="themeIcon lightIcon">☀</span>
+          <span class="themeIcon darkIcon">☾</span>
+        </button>
         <div class="sidebarFoot"><span>Account</span><strong>Subscription</strong><small>Plan and usage details</small></div>
       </aside>
       <main class="appMain accountMain">
@@ -45,6 +49,7 @@
         </section>
       </main>
     </div>
-    <script src="/static/account.js?v=20260608-pro-redesign"></script>
+    <script src="/static/theme.js?v=20260608-theme"></script>
+    <script src="/static/account.js?v=20260608-theme"></script>
   </body>
 </html>
