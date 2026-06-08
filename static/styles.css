@@ -1306,3 +1306,629 @@ td img {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* DataScrape Pro redesign inspired by the supplied reference */
+:root {
+  color-scheme: dark;
+  --ink: #f4f4f8;
+  --muted: #a0a0b7;
+  --line: rgba(255, 255, 255, 0.1);
+  --paper: #060608;
+  --panel: #181820;
+  --accent: #6366f1;
+  --accent-dark: #818cf8;
+  --warn: #f43f5e;
+  --surface-2: #20202b;
+  --green: #10b981;
+  --amber: #f59e0b;
+  --cyan: #06b6d4;
+  --violet: #8b5cf6;
+}
+
+body.appBody {
+  min-height: 100vh;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 16% 0%, rgba(99, 102, 241, 0.24), transparent 34%),
+    radial-gradient(circle at 88% 12%, rgba(6, 182, 212, 0.14), transparent 30%),
+    linear-gradient(180deg, #060608 0%, #0c0c12 55%, #070709 100%);
+}
+
+.appBody::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: linear-gradient(to bottom, black, transparent 78%);
+}
+
+.appLayout {
+  display: block;
+  min-height: 100vh;
+}
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 22px;
+  width: 100%;
+  height: 72px;
+  min-width: 0;
+  padding: 0 40px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(6, 6, 8, 0.76);
+  color: var(--ink);
+  backdrop-filter: blur(22px) saturate(1.35);
+}
+
+.sidebarBrand {
+  flex: 0 0 auto;
+  gap: 10px;
+  min-width: max-content;
+  padding: 0;
+  color: var(--ink);
+  font-size: 18px;
+}
+
+.sidebarBrand img {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: var(--accent);
+  box-shadow: 0 0 32px rgba(99, 102, 241, 0.38);
+}
+
+.sidebarBrand em {
+  color: var(--accent-dark);
+  font-style: normal;
+}
+
+.sidebarNav {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  margin: 0 auto;
+  padding: 5px;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(24, 24, 31, 0.88);
+  scrollbar-width: none;
+}
+
+.sidebarNav::-webkit-scrollbar {
+  display: none;
+}
+
+.sidebarNav a {
+  flex: 0 0 auto;
+  min-height: 36px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.sidebarNav a:hover,
+.sidebarNav a.active {
+  background: var(--surface-2);
+  color: var(--ink);
+  box-shadow: none;
+}
+
+.sidebarNav a.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.sidebarFoot {
+  display: none;
+}
+
+.appMain,
+.scraperMain,
+.pricingMain,
+.accountMain {
+  width: min(1180px, calc(100vw - 40px));
+  max-width: 1180px;
+  min-width: 0;
+  margin: 0 auto;
+  padding: 56px 0 72px;
+}
+
+.appTopbar {
+  align-items: flex-start;
+  margin-bottom: 28px;
+}
+
+.appTopbar h1 {
+  max-width: 880px;
+  font-size: clamp(34px, 5vw, 68px);
+  line-height: 0.98;
+  color: var(--ink);
+}
+
+.pageLead {
+  max-width: 760px;
+  color: var(--muted);
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--accent-dark);
+  letter-spacing: 0.04em;
+}
+
+.eyebrow::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 18px rgba(99, 102, 241, 0.8);
+}
+
+.accountButton,
+.backButton,
+.secondaryLink {
+  border: 1px solid var(--line);
+  background: rgba(24, 24, 31, 0.9);
+  color: var(--ink);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.accountButton:hover,
+.backButton:hover,
+.secondaryLink:hover {
+  border-color: var(--accent);
+}
+
+.primaryLink,
+.urlBar button,
+.iconButton,
+.upgradeButton,
+.priceButton {
+  border: 0;
+  background: linear-gradient(135deg, var(--accent), var(--violet));
+  color: #fff;
+  box-shadow: 0 12px 32px rgba(99, 102, 241, 0.26);
+}
+
+.heroConsole,
+.dashboardStats,
+.workflowCard,
+.dashboardBand,
+.scraperCommand,
+.statusBar,
+.tableWrap,
+.priceCard,
+.accountContent,
+.signedOutPanel,
+.accountLoading,
+.subscriptionPanel,
+.accountIdentity,
+.accountMetrics > div {
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.018)),
+    rgba(24, 24, 31, 0.86);
+  color: var(--ink);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.24);
+}
+
+.heroConsole {
+  overflow: hidden;
+  margin: 28px 0;
+  border-radius: 22px;
+}
+
+.consoleChrome {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.consoleChrome span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.consoleChrome span:nth-child(1) { background: var(--warn); }
+.consoleChrome span:nth-child(2) { background: var(--amber); }
+.consoleChrome span:nth-child(3) { background: var(--green); }
+.consoleChrome strong { margin-left: 6px; color: var(--muted); font-weight: 700; }
+
+.consoleGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 230px;
+  gap: 22px;
+  align-items: stretch;
+  padding: 26px;
+}
+
+.consoleGrid h2 {
+  max-width: 650px;
+  margin: 0;
+  font-size: clamp(26px, 3vw, 42px);
+  line-height: 1.06;
+}
+
+.consoleGrid p:last-child {
+  max-width: 680px;
+  color: var(--muted);
+}
+
+.consoleMetric {
+  display: grid;
+  align-content: center;
+  gap: 8px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(99, 102, 241, 0.12);
+}
+
+.consoleMetric span,
+.consoleMetric small,
+.dashboardStats span,
+.dashboardStats small,
+.priceCard p,
+.priceCard ul,
+.workflowCard p,
+.scrapeTypeGrid p,
+.status,
+.scrollHint {
+  color: var(--muted);
+}
+
+.consoleMetric strong {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 42px;
+}
+
+.dashboardStats {
+  border-radius: 18px;
+}
+
+.dashboardStats > div {
+  border-right-color: var(--line);
+}
+
+.workflowGrid,
+.pricingGrid,
+.scrapeTypeGrid {
+  gap: 16px;
+}
+
+.workflowCard {
+  border-radius: 18px;
+  background:
+    linear-gradient(135deg, rgba(99, 102, 241, 0.13), transparent 46%),
+    rgba(24, 24, 31, 0.88);
+}
+
+.workflowCard:hover {
+  border-color: rgba(129, 140, 248, 0.6);
+  box-shadow: 0 22px 70px rgba(99, 102, 241, 0.18);
+}
+
+.workflowIcon {
+  border-radius: 14px;
+  background: rgba(99, 102, 241, 0.18);
+  color: var(--accent-dark);
+}
+
+.categoryWorkflow .workflowIcon {
+  background: rgba(245, 158, 11, 0.14);
+  color: #fbbf24;
+}
+
+.scrapeTypeSection {
+  margin: 32px 0;
+}
+
+.scrapeTypeGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.scrapeTypeGrid article {
+  min-height: 170px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(99, 102, 241, 0.18), transparent 36%),
+    rgba(24, 24, 31, 0.86);
+}
+
+.scrapeTypeGrid span {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  margin-bottom: 18px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--accent-dark);
+  font-weight: 900;
+  font-size: 13px;
+}
+
+.scrapeTypeGrid strong {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 18px;
+}
+
+.dashboardBand {
+  border-color: rgba(99, 102, 241, 0.34);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(6, 182, 212, 0.16), transparent 40%),
+    rgba(99, 102, 241, 0.12);
+}
+
+.dashboardBand p:last-child {
+  color: var(--muted);
+}
+
+.scraperTypeStrip {
+  display: flex;
+  gap: 8px;
+  margin: -6px 0 20px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.scraperTypeStrip::-webkit-scrollbar {
+  display: none;
+}
+
+.scraperTypeStrip span {
+  flex: 0 0 auto;
+  padding: 8px 13px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(24, 24, 31, 0.78);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.scraperCommand {
+  border-radius: 20px;
+}
+
+.urlBar {
+  border-color: var(--line);
+  border-radius: 16px;
+  background: rgba(8, 8, 12, 0.78);
+  box-shadow: none;
+}
+
+.urlBar input {
+  color: var(--ink);
+  background: transparent;
+}
+
+.urlBar input::placeholder {
+  color: #70708a;
+}
+
+.statusBar,
+.exportResult {
+  border-radius: 14px;
+  background: rgba(24, 24, 31, 0.74);
+}
+
+.scrollHint {
+  border-color: var(--line);
+  background: rgba(24, 24, 31, 0.88);
+  color: var(--muted);
+}
+
+.compactStats div {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(24, 24, 31, 0.78);
+}
+
+.compactStats span {
+  color: var(--ink);
+}
+
+.tab {
+  border-color: var(--line);
+  background: rgba(24, 24, 31, 0.85);
+  color: var(--muted);
+}
+
+.tab.active {
+  border-color: var(--accent);
+  background: rgba(99, 102, 241, 0.18);
+  color: var(--ink);
+}
+
+.tableWrap {
+  border-radius: 18px;
+  background: rgba(10, 10, 14, 0.86);
+  scrollbar-color: var(--accent) #111116;
+}
+
+th {
+  background: #15151c;
+  color: var(--ink);
+}
+
+td {
+  color: var(--muted);
+}
+
+td a {
+  color: var(--accent-dark);
+}
+
+.priceCard {
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(99, 102, 241, 0.14), transparent 35%),
+    rgba(24, 24, 31, 0.88);
+}
+
+.priceCard.recommended {
+  border-color: var(--accent);
+  box-shadow: 0 30px 90px rgba(99, 102, 241, 0.22);
+}
+
+.recommendedTag {
+  background: linear-gradient(135deg, var(--accent), var(--violet));
+}
+
+.priceValue strong,
+.priceName {
+  color: var(--ink);
+}
+
+.authModal {
+  border: 1px solid var(--line);
+  background: #181820;
+  color: var(--ink);
+  box-shadow: 0 40px 120px rgba(0, 0, 0, 0.55);
+}
+
+.authModal p {
+  color: var(--muted);
+}
+
+.googleButton {
+  border-color: var(--line);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--ink);
+}
+
+.closeButton {
+  color: var(--muted);
+}
+
+.accountContent,
+.signedOutPanel,
+.accountLoading {
+  border-radius: 22px;
+}
+
+@media (max-width: 980px) {
+  .sidebar {
+    padding: 0 18px;
+  }
+
+  .sidebarNav {
+    margin-left: auto;
+    margin-right: 0;
+  }
+
+  .consoleGrid,
+  .scrapeTypeGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .pricingGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .sidebar {
+    height: auto;
+    padding: 12px;
+    align-items: stretch;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .sidebarBrand {
+    padding: 0 4px 2px;
+  }
+
+  .sidebarNav {
+    width: 100%;
+    margin: 0;
+    border-radius: 14px;
+  }
+
+  .appMain,
+  .scraperMain,
+  .pricingMain,
+  .accountMain {
+    width: min(100vw - 24px, 1180px);
+    padding: 34px 0 54px;
+  }
+
+  .appTopbar {
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .appTopbar h1 {
+    font-size: 38px;
+  }
+
+  .dashboardStats {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboardStats > div {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .dashboardStats > div:last-child {
+    border-bottom: 0;
+  }
+
+  .workflowGrid,
+  .compactStats {
+    grid-template-columns: 1fr;
+  }
+
+  .workflowCard {
+    grid-template-columns: 48px minmax(0, 1fr);
+  }
+
+  .workflowArrow {
+    display: none;
+  }
+
+  .consoleGrid,
+  .dashboardBand,
+  .commandMeta {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .urlBar {
+    grid-template-columns: 1fr;
+  }
+
+  .urlBar button {
+    width: 100%;
+  }
+}

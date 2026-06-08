@@ -3,14 +3,14 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Single Category Scraper</title>
+    <title>Single Category Scraper · DataScrape Pro</title>
     <link rel="icon" type="image/png" href="/static/assets/favicon.png" />
     <link rel="stylesheet" href="/static/styles.css?v=20260608-dashboard" />
   </head>
   <body class="appBody">
     <div class="appLayout">
       <aside class="sidebar">
-        <a class="sidebarBrand" href="/"><img src="/static/assets/scraper-logo-512.png" alt="" /><span>Data Scraper</span></a>
+        <a class="sidebarBrand" href="/"><img src="/static/assets/scraper-logo-512.png" alt="" /><span>DataScrape <em>Pro</em></span></a>
         <nav class="sidebarNav" aria-label="Main navigation">
           <a href="/">Dashboard</a><a href="/website">Overall Website</a>
           <a class="active" href="/category">Single Category</a><a href="/pricing">Pricing</a><a href="/account">My Account</a>
@@ -25,6 +25,9 @@
             <button id="downloadButton" class="iconButton" disabled title="Download Excel" aria-label="Download Excel">↓</button>
           </div>
         </header>
+        <section class="scraperTypeStrip" aria-label="Extracted data types">
+          <span>Listings</span><span>All images</span><span>Model numbers</span><span>Prices</span><span>Stock</span><span>Descriptions</span><span>Links</span><span>Metadata</span>
+        </section>
         <section class="scraperCommand">
           <div class="commandMeta"><span>Category URL</span><strong>Free preview · $5/month complete</strong></div>
           <form class="urlBar scrapeForm" data-mode="category">

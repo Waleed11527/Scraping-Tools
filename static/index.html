@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Dashboard · Website Data Scraper</title>
+    <title>Dashboard · DataScrape Pro</title>
     <link rel="icon" type="image/png" href="/static/assets/favicon.png" />
     <link rel="stylesheet" href="/static/styles.css?v=20260608-dashboard" />
   </head>
@@ -12,7 +12,7 @@
       <aside class="sidebar">
         <a class="sidebarBrand" href="/">
           <img src="/static/assets/scraper-logo-512.png" alt="" />
-          <span>Data Scraper</span>
+          <span>DataScrape <em>Pro</em></span>
         </a>
         <nav class="sidebarNav" aria-label="Main navigation">
           <a class="active" href="/">Dashboard</a>
@@ -31,11 +31,24 @@
       <main class="appMain">
         <header class="appTopbar">
           <div>
-            <p class="eyebrow">Dashboard</p>
-            <h1>Welcome to your scraping workspace</h1>
+            <p class="eyebrow">Professional web data extraction</p>
+            <h1>Extract complete website data and export it to Excel</h1>
+            <p class="pageLead">Scrape products, prices, images, model numbers, links, metadata and full listing details from stores and category pages.</p>
           </div>
           <button id="accountButton" class="accountButton" type="button">Sign in</button>
         </header>
+
+        <section class="heroConsole" aria-label="Scraper overview">
+          <div class="consoleChrome"><span></span><span></span><span></span><strong>Live scraper engine</strong></div>
+          <div class="consoleGrid">
+            <div>
+              <p class="eyebrow">Ready workflows</p>
+              <h2>Choose a URL, run extraction, download Excel.</h2>
+              <p>Use a whole website URL when you want the system to discover categories, or use one category link when you already know the catalog page.</p>
+            </div>
+            <div class="consoleMetric"><span>Output</span><strong>.xlsx</strong><small>Listings, images, links and metadata</small></div>
+          </div>
+        </section>
 
         <section class="dashboardStats">
           <div><span>Plan</span><strong id="dashboardPlan">Free</strong><small id="dashboardPlanDetail">50 listings per scrape</small></div>
@@ -67,6 +80,23 @@
             </div>
             <span class="workflowArrow">→</span>
           </a>
+        </section>
+
+        <section class="scrapeTypeSection">
+          <div class="sectionHeading">
+            <div>
+              <p class="eyebrow">All scraping types</p>
+              <h2>Built for every data job</h2>
+            </div>
+          </div>
+          <div class="scrapeTypeGrid">
+            <article><span>EC</span><strong>E-commerce products</strong><p>Titles, prices, sale prices, stock, brands, SKUs and model numbers.</p></article>
+            <article><span>IM</span><strong>Images and galleries</strong><p>Collect unique listing images without repeating the same image many times.</p></article>
+            <article><span>PR</span><strong>Price monitoring</strong><p>Capture regular price, sale price and detail-page price fields.</p></article>
+            <article><span>LK</span><strong>Links and metadata</strong><p>Export page links, canonical URLs, meta descriptions and structured fields.</p></article>
+            <article><span>RE</span><strong>Real estate listings</strong><p>Use category scraping for property grids, cards and product-style pages.</p></article>
+            <article><span>TB</span><strong>Tables and catalogs</strong><p>Use the generic scraper engine to pull rows from product tables and listings.</p></article>
+          </div>
         </section>
 
         <section class="dashboardBand">
