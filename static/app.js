@@ -12,6 +12,10 @@ const upgradeButtons = [...document.querySelectorAll(".upgradeButton")];
 const accountButton = document.querySelector("#accountButton");
 const authModal = document.querySelector("#authModal");
 const closeAuthModal = document.querySelector("#closeAuthModal");
+const scrapeTypeSelect = document.querySelector("#scrapeTypeSelect");
+const selectedTypeEyebrow = document.querySelector("#selectedTypeEyebrow");
+const selectedTypeTitle = document.querySelector("#selectedTypeTitle");
+const selectedTypeDescription = document.querySelector("#selectedTypeDescription");
 
 let scrapeData = null;
 let accountPlan = "free";
@@ -60,6 +64,32 @@ const columns = {
   links: ["href", "text"],
   metadata: ["name", "content"],
 };
+
+function setSelectedScrapeType(slug) {
+  if (!scrapeTypeSelect || !window.SCRAPE_TYPES) return;
+  const [typeSlug, typeName, typeDescription] = findScrapeType(slug);
+  scrapeTypeSelect.value = typeSlug;
+  if (selectedTypeEyebrow) selectedTypeEyebrow.textContent = typeName;
+  if (selectedTypeTitle) selectedTypeTitle.textContent = `Run ${typeName}`;
+  if (selectedTypeDescription) {
+    selectedTypeDescription.textContent = `${typeDescription} Paste a matching URL below and export the result to Excel.`;
+  }
+  const nextUrl = new URL(window.location.href);
+  nextUrl.searchParams.set("type", typeSlug);
+  window.history.replaceState({}, "", nextUrl);
+}
+
+function setupScrapeTypeSelector() {
+  if (!scrapeTypeSelect || !window.SCRAPE_TYPES) return;
+  scrapeTypeSelect.innerHTML = SCRAPE_TYPES
+    .map(([slug, name]) => `<option value="${escapeAttr(slug)}">${escapeHtml(name)}</option>`)
+    .join("");
+  const params = new URLSearchParams(window.location.search);
+  setSelectedScrapeType(params.get("type") || "ecommerce-scraping");
+  scrapeTypeSelect.addEventListener("change", () => {
+    setSelectedScrapeType(scrapeTypeSelect.value);
+  });
+}
 
 function setStatus(message, error = false) {
   statusEl.textContent = message;
@@ -364,6 +394,7 @@ downloadButton.addEventListener("click", async () => {
 });
 
 renderTable();
+setupScrapeTypeSelector();
 loadUser();
 loadPlan();
 

@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Scraping Categories · DataScrape Pro</title>
+    <link rel="icon" type="image/png" href="/static/assets/favicon.png" />
+    <link rel="stylesheet" href="/static/styles.css?v=20260608-categories" />
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8822154425337823" crossorigin="anonymous"></script>
+  </head>
+  <body class="appBody" data-theme="light">
+    <div class="appLayout">
+      <aside class="sidebar">
+        <a class="sidebarBrand" href="/"><img src="/static/assets/scraper-logo-512.png" alt="" /><span>DataScrape <em>Pro</em></span></a>
+        <nav class="sidebarNav" aria-label="Main navigation">
+          <a href="/">Dashboard</a><a class="active" href="/categories">Categories</a><a href="/pricing">Pricing</a><a href="/account">My Account</a>
+        </nav>
+        <button id="themeToggle" class="themeToggle" type="button" aria-label="Switch to dark mode" title="Switch theme">
+          <span class="themeIcon lightIcon">☀</span>
+          <span class="themeIcon darkIcon">☾</span>
+        </button>
+      </aside>
+
+      <main class="appMain categoriesMain">
+        <header class="appTopbar">
+          <div>
+            <p class="eyebrow">Scraping categories</p>
+            <h1>Choose the exact type of data you want to scrape</h1>
+            <p class="pageLead">Pick a category below, paste your target URL, and export listing data, images, links, prices, metadata and details to Excel.</p>
+          </div>
+          <a class="primaryLink" href="#how-to-use">How to use</a>
+        </header>
+
+        <section id="allCategoryGrid" class="scrapeTypeGrid categoryGrid"></section>
+
+        <section class="howToSection" id="how-to-use">
+          <div class="sectionHeading">
+            <div>
+              <p class="eyebrow">How to use</p>
+              <h2>From category to Excel in minutes</h2>
+            </div>
+          </div>
+          <div class="howToGrid">
+            <article><span>01</span><strong>Select a scraping category</strong><p>Choose the data type that best matches the page, such as e-commerce, jobs, real estate, images or prices.</p></article>
+            <article><span>02</span><strong>Paste your target link</strong><p>Use a category page, search result page, listing page, storefront URL or public content page.</p></article>
+            <article><span>03</span><strong>Run extraction</strong><p>The app scans the page, follows detail links, collects images and prepares structured rows.</p></article>
+            <article><span>04</span><strong>Download Excel</strong><p>Check the result tabs for listings, images, links and metadata, then download the workbook.</p></article>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/static/theme.js?v=20260608-categories"></script>
+    <script src="/static/scrape-types.js?v=20260608-categories"></script>
+    <script>
+      renderScrapeTypeCards(document.querySelector("#allCategoryGrid"));
+    </script>
+  </body>
+</html>
