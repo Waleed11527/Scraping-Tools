@@ -581,6 +581,176 @@ td img {
   text-align: center;
 }
 
+.accountShell {
+  width: min(960px, calc(100vw - 32px));
+  margin: 0 auto;
+  padding: 28px 0 56px;
+}
+
+.accountHeader,
+.accountIdentity,
+.subscriptionPanel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.accountHeader {
+  margin-bottom: 36px;
+}
+
+.brandLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.brandLink img {
+  width: 46px;
+  height: 46px;
+}
+
+.backButton,
+.primaryLink,
+.logoutButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 15px;
+  border-radius: 6px;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.backButton {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--ink);
+}
+
+.accountLoading,
+.signedOutPanel,
+.accountIdentity,
+.accountMetrics,
+.subscriptionPanel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.accountLoading {
+  padding: 32px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.accountContent {
+  display: grid;
+  gap: 18px;
+}
+
+.accountContent[hidden],
+.signedOutPanel[hidden] {
+  display: none;
+}
+
+.accountIdentity {
+  justify-content: flex-start;
+  padding: 24px;
+}
+
+.accountIdentity > img {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #eef4f1;
+}
+
+.accountIdentity h1 {
+  font-size: 32px;
+}
+
+.accountIdentity p:last-child {
+  margin: 6px 0 0;
+  color: var(--muted);
+}
+
+.accountMetrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.accountMetrics div {
+  min-height: 112px;
+  padding: 20px;
+  border-right: 1px solid var(--line);
+}
+
+.accountMetrics div:last-child {
+  border-right: 0;
+}
+
+.accountMetrics span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.accountMetrics strong {
+  font-size: 22px;
+}
+
+.subscriptionPanel {
+  padding: 24px;
+}
+
+.subscriptionPanel h2 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.subscriptionPanel p:last-child {
+  margin: 8px 0 0;
+  color: var(--muted);
+}
+
+.primaryLink {
+  flex: 0 0 auto;
+  background: var(--accent);
+  color: #fff;
+}
+
+.logoutButton {
+  width: fit-content;
+  border: 1px solid #d9b8b8;
+  background: #fff;
+  color: var(--warn);
+}
+
+.signedOutPanel {
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.signedOutPanel > img {
+  width: 82px;
+  height: 82px;
+}
+
+.signedOutPanel h1 {
+  font-size: 32px;
+}
+
 @media (max-width: 720px) {
   .shell {
     width: min(100vw - 20px, 1180px);
@@ -626,6 +796,26 @@ td img {
 
   .stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .accountHeader,
+  .subscriptionPanel {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .accountMetrics {
+    grid-template-columns: 1fr;
+  }
+
+  .accountMetrics div {
+    min-height: 88px;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .accountMetrics div:last-child {
+    border-bottom: 0;
   }
 
   th,

@@ -25,6 +25,8 @@ from xml.sax.saxutils import escape as xml_escape
 ROOT = Path(__file__).parent
 STATIC_DIR = ROOT / "static"
 EXPORT_DIR = ROOT / "exports"
+DATA_DIR = Path(os.environ.get("DATA_DIR", ROOT / "data"))
+ACCOUNT_DB = DATA_DIR / "accounts.json"
 PORT = int(os.environ.get("PORT", "8787"))
 HOST = os.environ.get("HOST", "0.0.0.0")
 STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")
@@ -33,8 +35,11 @@ GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
 GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
 AUTH_SECRET = os.environ.get("AUTH_SECRET", "")
 FREE_ITEM_LIMIT = 50
+FREE_SCRAPE_LIMIT = 3
+SUBSCRIPTION_SECONDS = 31 * 24 * 60 * 60
 PLAN_PRICES = {"category": 500, "pro": 1000}
 PLAN_LABELS = {"free": "Free", "category": "Category", "pro": "Full Access"}
+LIFETIME_FREE_EMAILS = {"waleedk4pak@gmail.com"}
 ACCESS_COOKIE = "scraper_access"
 SESSION_COOKIE = "scraper_session"
 OAUTH_STATE_COOKIE = "scraper_oauth_state"
@@ -88,6 +93,7 @@ DETAIL_KEYS = {
 SALLA_LIST_INCLUDES = ["images", "metadata"]
 JOBS = {}
 JOBS_LOCK = threading.Lock()
+ACCOUNTS_LOCK = threading.Lock()
 
 
 class Node:
@@ -191,7 +197,7 @@ def update_job(job_id, **updates):
         job["updated_at"] = time.time()
 
 
-def create_scrape_job(url, mode="auto", plan="free"):
+def create_scrape_job(url, mode="auto", plan="free", user_email=""):
     if mode not in {"auto", "website", "category"}:
         raise ValueError("Invalid scrape mode.")
     if plan == "category" and mode != "category":
@@ -204,6 +210,7 @@ def create_scrape_job(url, mode="auto", plan="free"):
             "message": "Queued",
             "url": url,
             "mode": mode,
+            "user_email": normalize_email(user_email),
             "created_at": time.time(),
             "updated_at": time.time(),
             "counts": {},
@@ -288,6 +295,192 @@ def oauth_request(url, fields=None, access_token=""):
         raise ValueError("Google sign-in could not be completed.") from exc
 
 
+def normalize_email(value):
+    return clean_text(value).lower()
+
+
+def empty_accounts_db():
+    return {"users": {}}
+
+
+def load_accounts_db():
+    if not ACCOUNT_DB.exists():
+        return empty_accounts_db()
+    try:
+        data = json.loads(ACCOUNT_DB.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return empty_accounts_db()
+    if not isinstance(data, dict) or not isinstance(data.get("users"), dict):
+        return empty_accounts_db()
+    return data
+
+
+def save_accounts_db(data):
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    tmp_path = ACCOUNT_DB.with_suffix(".tmp")
+    tmp_path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    tmp_path.replace(ACCOUNT_DB)
+
+
+def default_account(email, user=None):
+    now = int(time.time())
+    return {
+        "email": email,
+        "name": (user or {}).get("name", email),
+        "picture": (user or {}).get("picture", ""),
+        "created_at": now,
+        "updated_at": now,
+        "free_scrapes_used": 0,
+        "plan": "free",
+        "plan_status": "free",
+        "subscription_id": "",
+        "subscription_expires_at": 0,
+        "subscription_checked_at": 0,
+        "lifetime_access": email in LIFETIME_FREE_EMAILS,
+    }
+
+
+def apply_lifetime_access(account):
+    email = normalize_email(account.get("email", ""))
+    account["lifetime_access"] = email in LIFETIME_FREE_EMAILS
+    if account["lifetime_access"]:
+        account["plan"] = "pro"
+        account["plan_status"] = "lifetime"
+        account["subscription_id"] = account.get("subscription_id", "")
+        account["subscription_expires_at"] = 0
+
+
+def ensure_account(user):
+    email = normalize_email((user or {}).get("email", ""))
+    if not email:
+        return None
+    with ACCOUNTS_LOCK:
+        data = load_accounts_db()
+        account = data["users"].get(email) or default_account(email, user)
+        account["email"] = email
+        account["name"] = (user or {}).get("name") or account.get("name") or email
+        account["picture"] = (user or {}).get("picture") or account.get("picture", "")
+        account["updated_at"] = int(time.time())
+        account.setdefault("free_scrapes_used", 0)
+        account.setdefault("plan", "free")
+        account.setdefault("plan_status", "free")
+        account.setdefault("subscription_id", "")
+        account.setdefault("subscription_expires_at", 0)
+        account.setdefault("subscription_checked_at", 0)
+        apply_lifetime_access(account)
+        data["users"][email] = account
+        save_accounts_db(data)
+        return dict(account)
+
+
+def update_account(email, updater):
+    email = normalize_email(email)
+    with ACCOUNTS_LOCK:
+        data = load_accounts_db()
+        account = data["users"].get(email) or default_account(email)
+        updater(account)
+        account["updated_at"] = int(time.time())
+        apply_lifetime_access(account)
+        data["users"][email] = account
+        save_accounts_db(data)
+        return dict(account)
+
+
+def account_effective_plan(account):
+    if not account:
+        return "free"
+    if account.get("lifetime_access"):
+        return "pro"
+    plan = account.get("plan", "free")
+    expires_at = int(account.get("subscription_expires_at") or 0)
+    if plan in {"category", "pro"} and expires_at > time.time():
+        return plan
+    return "free"
+
+
+def account_public(account):
+    account = account or default_account("")
+    plan = account_effective_plan(account)
+    expires_at = int(account.get("subscription_expires_at") or 0)
+    remaining = max(0, FREE_SCRAPE_LIMIT - int(account.get("free_scrapes_used") or 0))
+    return {
+        "email": account.get("email", ""),
+        "name": account.get("name", ""),
+        "picture": account.get("picture", ""),
+        "plan": plan,
+        "label": PLAN_LABELS.get(plan, "Free"),
+        "plan_status": "lifetime" if account.get("lifetime_access") else account.get("plan_status", "free"),
+        "subscription_id": account.get("subscription_id", ""),
+        "subscription_expires_at": expires_at,
+        "subscription_expires_label": time.strftime("%Y-%m-%d", time.localtime(expires_at)) if expires_at else "",
+        "free_scrapes_used": int(account.get("free_scrapes_used") or 0),
+        "free_scrapes_limit": FREE_SCRAPE_LIMIT,
+        "free_scrapes_remaining": remaining,
+        "lifetime_access": bool(account.get("lifetime_access")),
+    }
+
+
+def activate_subscription(email, plan, subscription_id):
+    def updater(account):
+        account["plan"] = plan
+        account["plan_status"] = "active"
+        account["subscription_id"] = subscription_id or account.get("subscription_id", "")
+        account["subscription_expires_at"] = int(time.time()) + SUBSCRIPTION_SECONDS
+        account["subscription_checked_at"] = int(time.time())
+
+    return update_account(email, updater)
+
+
+def subscription_period_end(subscription):
+    direct = int(subscription.get("current_period_end") or 0)
+    if direct:
+        return direct
+    items = ((subscription.get("items") or {}).get("data") or [])
+    return max((int(item.get("current_period_end") or 0) for item in items), default=0)
+
+
+def refresh_subscription(account):
+    if (
+        not account
+        or account.get("lifetime_access")
+        or not account.get("subscription_id")
+        or not STRIPE_SECRET_KEY
+    ):
+        return account
+    checked_at = int(account.get("subscription_checked_at") or 0)
+    if time.time() - checked_at < 6 * 60 * 60:
+        return account
+    try:
+        subscription = stripe_request(
+            "GET",
+            f"/v1/subscriptions/{urllib.parse.quote(account['subscription_id'])}",
+        )
+    except ValueError:
+        return account
+    status = subscription.get("status", "")
+    period_end = subscription_period_end(subscription)
+
+    def updater(current):
+        current["subscription_checked_at"] = int(time.time())
+        current["plan_status"] = status or current.get("plan_status", "")
+        if period_end:
+            current["subscription_expires_at"] = period_end
+        if status in {"unpaid", "incomplete_expired", "paused"}:
+            current["subscription_expires_at"] = min(
+                int(current.get("subscription_expires_at") or 0),
+                int(time.time()),
+            )
+
+    return update_account(account.get("email"), updater)
+
+
+def increment_free_scrape(email):
+    def updater(account):
+        account["free_scrapes_used"] = int(account.get("free_scrapes_used") or 0) + 1
+
+    return update_account(email, updater)
+
+
 def apply_plan_limit(data, plan):
     if plan != "free":
         data["plan"] = plan
@@ -345,12 +538,15 @@ def stripe_request(method, path, fields=None):
         raise ValueError(detail or "Stripe could not process the payment request.") from exc
 
 
-def get_job(job_id):
+def get_job(job_id, user_email=""):
     with JOBS_LOCK:
         job = JOBS.get(job_id)
         if not job:
             return None
+        if job.get("user_email") != normalize_email(user_email):
+            return None
         public = dict(job)
+        public.pop("user_email", None)
     return public
 
 
@@ -1669,22 +1865,34 @@ class AppHandler(BaseHTTPRequestHandler):
             return self.send_json({"status": "ok"})
         if path == "/api/me":
             user = self.current_user()
+            account = ensure_account(user) if user else None
             return self.send_json(
                 {
                     "authenticated": bool(user),
                     "user": user,
+                    "account": account_public(account) if account else None,
                     "google_configured": bool(
                         GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET and signing_secret()
                     ),
                 }
             )
+        if path == "/api/account":
+            user = self.require_user()
+            if not user:
+                return
+            return self.send_json({"account": account_public(self.current_account())})
         if path == "/api/plan":
-            plan = self.current_plan()
+            account = self.current_account()
+            plan = account_effective_plan(account)
+            public_account = account_public(account) if account else None
             return self.send_json(
                 {
                     "plan": plan,
                     "label": PLAN_LABELS[plan],
                     "free_item_limit": FREE_ITEM_LIMIT,
+                    "free_scrape_limit": FREE_SCRAPE_LIMIT,
+                    "free_scrapes_remaining": (public_account or {}).get("free_scrapes_remaining", FREE_SCRAPE_LIMIT),
+                    "monthly": True,
                     "payments_configured": bool(STRIPE_SECRET_KEY and signing_secret()),
                 }
             )
@@ -1737,6 +1945,7 @@ class AppHandler(BaseHTTPRequestHandler):
                 return self.redirect("/?auth=failed")
             if not user.get("email") or not user.get("email_verified"):
                 return self.redirect("/?auth=unverified")
+            ensure_account(user)
             return self.redirect(
                 "/?auth=success",
                 cookie=self.cookie_header(
@@ -1759,11 +1968,12 @@ class AppHandler(BaseHTTPRequestHandler):
                 return self.redirect("/?payment=missing")
             session = stripe_request("GET", f"/v1/checkout/sessions/{urllib.parse.quote(session_id)}")
             plan = (session.get("metadata") or {}).get("plan")
-            if session.get("payment_status") != "paid" or plan not in {"category", "pro"}:
+            if session.get("payment_status") not in {"paid", "no_payment_required"} or plan not in {"category", "pro"}:
                 return self.redirect("/?payment=unconfirmed")
             session_email = (session.get("metadata") or {}).get("email")
-            if session_email != user.get("email"):
+            if normalize_email(session_email) != normalize_email(user.get("email")):
                 return self.redirect("/?payment=unconfirmed")
+            activate_subscription(user.get("email"), plan, session.get("subscription", ""))
             cookie = encode_access_cookie(plan, user.get("email"))
             return self.redirect(
                 f"/?payment=success&plan={urllib.parse.quote(plan)}",
@@ -1771,12 +1981,15 @@ class AppHandler(BaseHTTPRequestHandler):
             )
         if path == "/":
             return self.serve_file(STATIC_DIR / "index.html", "text/html; charset=utf-8")
+        if path == "/account":
+            return self.serve_file(STATIC_DIR / "account.html", "text/html; charset=utf-8")
         if path == "/api/job":
-            if not self.require_user():
+            user = self.require_user()
+            if not user:
                 return
             params = urllib.parse.parse_qs(parsed.query)
             job_id = (params.get("id") or [""])[0]
-            job = get_job(job_id)
+            job = get_job(job_id, user.get("email"))
             if not job:
                 return self.send_json({"error": "Scrape job not found."}, 404)
             return self.send_json(job)
@@ -1805,18 +2018,33 @@ class AppHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         try:
             if self.path == "/api/scrape":
-                if not self.require_user():
+                user = self.require_user()
+                if not user:
                     return
                 payload = self.read_json()
+                account = ensure_account(user)
+                plan = account_effective_plan(account)
+                if plan == "free" and int(account.get("free_scrapes_used") or 0) >= FREE_SCRAPE_LIMIT:
+                    return self.send_json(
+                        {
+                            "error": "Your 3 free scrapes are finished. Upgrade to a monthly plan to continue.",
+                            "upgrade_required": True,
+                        },
+                        402,
+                    )
                 job_id = create_scrape_job(
                     payload.get("url", ""),
                     payload.get("mode", "auto"),
-                    self.current_plan(),
+                    plan,
+                    user.get("email"),
                 )
+                if plan == "free":
+                    increment_free_scrape(user.get("email"))
                 return self.send_json(
                     {
                         "job_id": job_id,
                         "status": "queued",
+                        "free_scrapes_remaining": account_public(ensure_account(user))["free_scrapes_remaining"],
                         "message": "Scrape started. The app will update progress here.",
                     }
                 )
@@ -1833,14 +2061,15 @@ class AppHandler(BaseHTTPRequestHandler):
                     "POST",
                     "/v1/checkout/sessions",
                     {
-                        "mode": "payment",
+                        "mode": "subscription",
                         "success_url": f"{origin}/billing/success?session_id={{CHECKOUT_SESSION_ID}}",
                         "cancel_url": f"{origin}/?payment=cancelled",
                         "line_items[0][quantity]": "1",
                         "line_items[0][price_data][currency]": "usd",
                         "line_items[0][price_data][unit_amount]": str(PLAN_PRICES[plan]),
+                        "line_items[0][price_data][recurring][interval]": "month",
                         "line_items[0][price_data][product_data][name]": (
-                            "Category Scraping Access" if plan == "category" else "Full Website Scraping Access"
+                            "Monthly Category Scraping Access" if plan == "category" else "Monthly Full Website Scraping Access"
                         ),
                         "metadata[plan]": plan,
                         "metadata[email]": user.get("email"),
@@ -1897,14 +2126,12 @@ class AppHandler(BaseHTTPRequestHandler):
         self.wfile.write(raw)
 
     def current_plan(self):
+        return account_effective_plan(self.current_account())
+
+    def current_account(self):
         user = self.current_user()
-        if not user:
-            return "free"
-        access = decode_signed_payload(self.cookies().get(ACCESS_COOKIE, ""))
-        plan = access.get("plan", "free")
-        if access.get("email") != user.get("email") or plan not in PLAN_LABELS:
-            return "free"
-        return plan
+        account = ensure_account(user) if user else None
+        return refresh_subscription(account)
 
     def cookies(self):
         cookies = {}

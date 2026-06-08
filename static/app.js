@@ -7,6 +7,7 @@ const tabs = [...document.querySelectorAll(".tab")];
 const tableHead = document.querySelector("#tableHead");
 const tableBody = document.querySelector("#tableBody");
 const currentPlanEl = document.querySelector("#currentPlan");
+const freePlanText = document.querySelector("#freePlanText");
 const upgradeButtons = [...document.querySelectorAll(".upgradeButton")];
 const accountButton = document.querySelector("#accountButton");
 const authModal = document.querySelector("#authModal");
@@ -93,8 +94,8 @@ async function loadUser() {
     const response = await fetch("/api/me");
     const account = await response.json();
     currentUser = account.authenticated ? account.user : null;
-    accountButton.textContent = currentUser ? currentUser.name : "Sign in";
-    accountButton.title = currentUser ? `${currentUser.email} — click to sign out` : "Log in or sign up";
+    accountButton.textContent = currentUser ? "Account" : "Sign in";
+    accountButton.title = currentUser ? `${currentUser.email} — view account` : "Log in or sign up";
   } catch {
     currentUser = null;
     accountButton.textContent = "Sign in";
@@ -103,7 +104,7 @@ async function loadUser() {
 
 accountButton.addEventListener("click", () => {
   if (currentUser) {
-    window.location.href = "/auth/logout";
+    window.location.href = "/account";
   } else {
     showAuthModal();
   }
@@ -203,6 +204,9 @@ async function loadPlan() {
     const account = await response.json();
     accountPlan = account.plan || "free";
     currentPlanEl.textContent = account.label || "Free";
+    if (freePlanText && account.plan === "free") {
+      freePlanText.textContent = `${account.free_scrapes_remaining ?? 3} of 3 free scrapes remaining · 50 listings each`;
+    }
     upgradeButtons.forEach((button) => {
       const selected = button.dataset.plan === accountPlan;
       button.disabled = selected;

@@ -30,6 +30,7 @@ Configure these variables for Google login:
 - `GOOGLE_CLIENT_ID`: OAuth 2.0 web client ID from Google Cloud.
 - `GOOGLE_CLIENT_SECRET`: OAuth 2.0 web client secret from Google Cloud.
 - `AUTH_SECRET`: a long random secret used to sign login sessions.
+- `DATA_DIR`: persistent account-data directory. Use `/data` when a Railway volume is mounted there.
 
 Add this authorized redirect URI to the Google OAuth web client:
 
@@ -39,9 +40,12 @@ https://YOUR-RAILWAY-DOMAIN/auth/google/callback
 
 The plan rules are enforced by the server:
 
-- Free: up to 50 listings from either scraping mode.
-- Category ($5 one-time): complete Single Category scrapes.
-- Full Access ($10 one-time): complete Overall Website and Single Category scrapes.
+- Free: 3 scrapes per Google account, with up to 50 listings per scrape.
+- Category ($5/month): complete Single Category scrapes for one month.
+- Full Access ($10/month): complete Overall Website and Single Category scrapes for one month.
+- `Waleedk4pak@gmail.com`: lifetime Full Access.
+
+For Railway persistence, add a volume mounted at `/data`, then set `DATA_DIR=/data`.
 
 ## What It Extracts
 

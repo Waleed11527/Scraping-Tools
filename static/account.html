@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>My Account · Website Data Scraper</title>
+    <link rel="icon" type="image/png" href="/static/assets/favicon.png" />
+    <link rel="stylesheet" href="/static/styles.css?v=20260608-account" />
+  </head>
+  <body>
+    <main class="accountShell">
+      <header class="accountHeader">
+        <a class="brandLink" href="/">
+          <img src="/static/assets/scraper-logo-512.png" alt="" />
+          <span>Website Data Scraper</span>
+        </a>
+        <a class="backButton" href="/">Back to scraper</a>
+      </header>
+
+      <section id="accountLoading" class="accountLoading">Loading your account…</section>
+
+      <section id="accountContent" class="accountContent" hidden>
+        <header class="accountIdentity">
+          <img id="accountAvatar" alt="" />
+          <div>
+            <p class="eyebrow">My Account</p>
+            <h1 id="accountName">Account</h1>
+            <p id="accountEmail"></p>
+          </div>
+        </header>
+
+        <section class="accountMetrics" aria-label="Account summary">
+          <div>
+            <span>Current plan</span>
+            <strong id="accountPlan">Free</strong>
+          </div>
+          <div>
+            <span>Free scrapes remaining</span>
+            <strong id="freeScrapesRemaining">3</strong>
+          </div>
+          <div>
+            <span>Subscription valid until</span>
+            <strong id="subscriptionExpiry">Not subscribed</strong>
+          </div>
+        </section>
+
+        <section class="subscriptionPanel">
+          <div>
+            <p class="eyebrow">Subscription</p>
+            <h2 id="subscriptionTitle">Free plan</h2>
+            <p id="subscriptionDescription">You can run 3 free scrapes with up to 50 listings in each result.</p>
+          </div>
+          <a class="primaryLink" href="/#plans">View plans</a>
+        </section>
+
+        <a class="logoutButton" href="/auth/logout">Sign out</a>
+      </section>
+
+      <section id="accountSignedOut" class="signedOutPanel" hidden>
+        <img src="/static/assets/scraper-logo-512.png" alt="" />
+        <h1>Sign in to view your account</h1>
+        <a class="googleButton" href="/auth/google"><span class="googleMark">G</span>Continue with Google</a>
+      </section>
+    </main>
+    <script src="/static/account.js?v=20260608-account"></script>
+  </body>
+</html>
