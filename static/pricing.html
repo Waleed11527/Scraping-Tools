@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pricing · Website Data Scraper</title>
+    <link rel="icon" type="image/png" href="/static/assets/favicon.png" />
+    <link rel="stylesheet" href="/static/styles.css?v=20260608-dashboard" />
+  </head>
+  <body class="appBody">
+    <div class="appLayout">
+      <aside class="sidebar">
+        <a class="sidebarBrand" href="/"><img src="/static/assets/scraper-logo-512.png" alt="" /><span>Data Scraper</span></a>
+        <nav class="sidebarNav" aria-label="Main navigation">
+          <a href="/">Dashboard</a><a href="/website">Overall Website</a><a href="/category">Single Category</a>
+          <a class="active" href="/pricing">Pricing</a><a href="/account">My Account</a>
+        </nav>
+        <div class="sidebarFoot"><span>Current plan</span><strong id="currentPlan">Free</strong><small id="planFootnote">3 free scrapes</small></div>
+      </aside>
+      <main class="appMain pricingMain">
+        <header class="appTopbar pricingHeader">
+          <div><p class="eyebrow">Simple monthly pricing</p><h1>Choose the access your work needs</h1><p class="pageLead">Every plan includes detailed product data and Excel export. Paid access stays attached to the purchasing Gmail account.</p></div>
+          <button id="accountButton" class="accountButton" type="button">Sign in</button>
+        </header>
+
+        <section class="pricingGrid">
+          <article class="priceCard">
+            <div><p class="priceName">Free</p><div class="priceValue"><strong>$0</strong></div><p>Test the workflow before subscribing.</p></div>
+            <ul><li>3 total scrapes</li><li>Up to 50 listings each</li><li>Product details and images</li><li>Excel export</li></ul>
+            <a class="secondaryLink" href="/category">Start free</a>
+          </article>
+          <article class="priceCard">
+            <div><p class="priceName">Category</p><div class="priceValue"><strong>$5</strong><span>/month</span></div><p>For focused catalog research.</p></div>
+            <ul><li>Complete category scraping</li><li>All listing images</li><li>Model and product details</li><li>Excel export</li></ul>
+            <button class="upgradeButton priceButton" data-plan="category" type="button">Choose Category</button>
+          </article>
+          <article class="priceCard recommended">
+            <span class="recommendedTag">Best for complete stores</span>
+            <div><p class="priceName">Full Access</p><div class="priceValue"><strong>$10</strong><span>/month</span></div><p>For complete store and category extraction.</p></div>
+            <ul><li>Overall website scraping</li><li>Complete category scraping</li><li>All product-page details</li><li>Excel export</li></ul>
+            <button class="upgradeButton priceButton" data-plan="pro" type="button">Choose Full Access</button>
+          </article>
+        </section>
+        <div id="status" class="status pricingStatus" role="status">Subscriptions renew monthly and remain linked to your Google account.</div>
+      </main>
+    </div>
+    <div id="authModal" class="modalBackdrop" hidden>
+      <section class="authModal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+        <button id="closeAuthModal" class="closeButton" type="button" aria-label="Close">×</button>
+        <img src="/static/assets/scraper-logo-512.png" alt="" /><p class="eyebrow">Continue securely</p>
+        <h2 id="authTitle">Sign in before subscribing</h2><p>Your paid plan will be connected to this Google account.</p>
+        <a class="googleButton" href="/auth/google"><span class="googleMark">G</span>Continue with Google</a>
+      </section>
+    </div>
+    <script src="/static/pricing.js?v=20260608-dashboard"></script>
+  </body>
+</html>

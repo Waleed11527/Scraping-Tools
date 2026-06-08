@@ -54,6 +54,7 @@ input {
 }
 
 .accountButton {
+  flex: 0 0 auto;
   min-height: 42px;
   max-width: 190px;
   padding: 0 14px;
@@ -821,5 +822,487 @@ td img {
   th,
   td {
     min-width: 170px;
+  }
+}
+
+/* Dashboard application shell */
+.appBody {
+  background: #eef1ef;
+}
+
+.appLayout {
+  display: grid;
+  grid-template-columns: 230px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 100vh;
+  padding: 22px 16px;
+  background: #17201b;
+  color: #fff;
+}
+
+.sidebarBrand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 8px 22px;
+  color: #fff;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.sidebarBrand img {
+  width: 42px;
+  height: 42px;
+  padding: 4px;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.sidebarNav {
+  display: grid;
+  gap: 4px;
+}
+
+.sidebarNav a {
+  min-height: 42px;
+  padding: 11px 12px;
+  border-radius: 6px;
+  color: #bdc7c1;
+  font-size: 14px;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.sidebarNav a:hover,
+.sidebarNav a.active {
+  background: #26332c;
+  color: #fff;
+}
+
+.sidebarNav a.active {
+  box-shadow: inset 3px 0 #42b89c;
+}
+
+.sidebarFoot {
+  display: grid;
+  gap: 3px;
+  margin-top: auto;
+  padding: 14px 12px;
+  border-top: 1px solid #354139;
+}
+
+.sidebarFoot span,
+.sidebarFoot small {
+  color: #9caaa2;
+  font-size: 12px;
+}
+
+.appMain {
+  min-width: 0;
+  width: min(1220px, 100%);
+  padding: 34px 38px 56px;
+}
+
+.appTopbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 28px;
+}
+
+.appTopbar h1 {
+  max-width: 780px;
+  font-size: 38px;
+  line-height: 1.08;
+}
+
+.pageLead {
+  max-width: 720px;
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.55;
+}
+
+.dashboardStats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-bottom: 34px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.dashboardStats > div {
+  min-height: 116px;
+  padding: 20px;
+  border-right: 1px solid var(--line);
+}
+
+.dashboardStats > div:last-child {
+  border-right: 0;
+}
+
+.dashboardStats span,
+.dashboardStats small {
+  display: block;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.dashboardStats strong {
+  display: block;
+  margin: 7px 0;
+  font-size: 28px;
+}
+
+.sectionHeading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.sectionHeading h2,
+.dashboardBand h2 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.workflowGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 30px;
+}
+
+.workflowCard {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  min-height: 150px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--ink);
+  text-decoration: none;
+  transition: border-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+}
+
+.workflowCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(23, 32, 27, 0.1);
+}
+
+.websiteWorkflow:hover {
+  border-color: #1b6f5f;
+}
+
+.categoryWorkflow:hover {
+  border-color: #b47a25;
+}
+
+.workflowIcon {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 8px;
+  background: #e6f1ee;
+  color: var(--accent-dark);
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.categoryWorkflow .workflowIcon {
+  background: #f5ecdc;
+  color: #8a5c17;
+}
+
+.workflowCard strong {
+  font-size: 19px;
+}
+
+.workflowCard p {
+  margin: 7px 0 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.workflowArrow {
+  font-size: 24px;
+}
+
+.dashboardBand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 24px;
+  border: 1px solid #b9d5cc;
+  border-radius: 8px;
+  background: #e6f1ee;
+}
+
+.dashboardBand p:last-child {
+  max-width: 720px;
+  margin: 8px 0 0;
+  color: #496159;
+}
+
+.scraperMain {
+  max-width: calc(100vw - 230px);
+}
+
+.scraperCommand {
+  margin-bottom: 14px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.commandMeta {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 10px;
+}
+
+.commandMeta span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.commandMeta strong {
+  color: var(--accent-dark);
+  font-size: 13px;
+}
+
+.statusBar {
+  padding: 11px 14px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #f8faf9;
+}
+
+.compactStats {
+  margin: 14px 0;
+}
+
+.compactStats div {
+  min-height: 74px;
+  padding: 12px;
+}
+
+.compactStats span {
+  font-size: 25px;
+}
+
+.pricingHeader {
+  margin-bottom: 34px;
+}
+
+.pricingGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.priceCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 440px;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.priceCard.recommended {
+  border: 2px solid var(--accent);
+}
+
+.recommendedTag {
+  position: absolute;
+  top: -13px;
+  left: 18px;
+  padding: 5px 9px;
+  border-radius: 5px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.priceName {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.priceValue {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  margin: 16px 0 10px;
+}
+
+.priceValue strong {
+  font-size: 44px;
+}
+
+.priceValue span,
+.priceCard p {
+  color: var(--muted);
+}
+
+.priceCard ul {
+  display: grid;
+  gap: 11px;
+  margin: 24px 0;
+  padding-left: 20px;
+  color: #405048;
+}
+
+.priceButton,
+.secondaryLink {
+  width: 100%;
+  min-height: 46px;
+  margin-top: auto;
+}
+
+.secondaryLink {
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--ink);
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.pricingStatus {
+  margin-top: 18px;
+  text-align: center;
+}
+
+.accountMain {
+  max-width: 1000px;
+}
+
+.accountMain .accountContent {
+  display: grid;
+}
+
+@media (max-width: 900px) {
+  .appLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: static;
+    width: 100%;
+    height: auto;
+    padding: 12px;
+    overflow: hidden;
+  }
+
+  .sidebarBrand {
+    padding: 0 4px 10px;
+  }
+
+  .sidebarNav {
+    display: flex;
+    gap: 5px;
+    overflow-x: auto;
+    padding-bottom: 3px;
+  }
+
+  .sidebarNav a {
+    flex: 0 0 auto;
+    min-height: 38px;
+    padding: 9px 11px;
+  }
+
+  .sidebarNav a.active {
+    box-shadow: inset 0 -3px #42b89c;
+  }
+
+  .sidebarFoot {
+    display: none;
+  }
+
+  .appMain,
+  .scraperMain {
+    width: 100%;
+    max-width: none;
+    padding: 24px 18px 44px;
+  }
+
+  .pricingGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .priceCard {
+    min-height: 390px;
+  }
+}
+
+@media (max-width: 640px) {
+  .appTopbar {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .appTopbar h1 {
+    font-size: 30px;
+  }
+
+  .appTopbar .accountButton {
+    align-self: flex-start;
+  }
+
+  .dashboardStats,
+  .workflowGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboardStats > div {
+    min-height: 90px;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .dashboardStats > div:last-child {
+    border-bottom: 0;
+  }
+
+  .workflowCard {
+    min-height: 132px;
+    padding: 17px;
+  }
+
+  .dashboardBand,
+  .commandMeta {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .compactStats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

@@ -1981,6 +1981,12 @@ class AppHandler(BaseHTTPRequestHandler):
             )
         if path == "/":
             return self.serve_file(STATIC_DIR / "index.html", "text/html; charset=utf-8")
+        if path == "/website":
+            return self.serve_file(STATIC_DIR / "website.html", "text/html; charset=utf-8")
+        if path == "/category":
+            return self.serve_file(STATIC_DIR / "category.html", "text/html; charset=utf-8")
+        if path == "/pricing":
+            return self.serve_file(STATIC_DIR / "pricing.html", "text/html; charset=utf-8")
         if path == "/account":
             return self.serve_file(STATIC_DIR / "account.html", "text/html; charset=utf-8")
         if path == "/api/job":

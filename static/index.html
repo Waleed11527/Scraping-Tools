@@ -3,128 +3,93 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Website Data Scraper</title>
+    <title>Dashboard · Website Data Scraper</title>
     <link rel="icon" type="image/png" href="/static/assets/favicon.png" />
-    <link rel="stylesheet" href="/static/styles.css?v=20260607-auth-animated" />
+    <link rel="stylesheet" href="/static/styles.css?v=20260608-dashboard" />
   </head>
-  <body>
-    <main class="shell">
-      <section class="workspace">
-        <header class="topbar">
-          <div class="brandIntro">
-            <img class="brandLogo" src="/static/assets/scraper-logo-512.png" alt="" />
-            <div>
-              <p class="eyebrow">Website Data Scraper</p>
-              <h1>Scrape a whole store or one category. Export everything to Excel.</h1>
-            </div>
+  <body class="appBody">
+    <div class="appLayout">
+      <aside class="sidebar">
+        <a class="sidebarBrand" href="/">
+          <img src="/static/assets/scraper-logo-512.png" alt="" />
+          <span>Data Scraper</span>
+        </a>
+        <nav class="sidebarNav" aria-label="Main navigation">
+          <a class="active" href="/">Dashboard</a>
+          <a href="/website">Overall Website</a>
+          <a href="/category">Single Category</a>
+          <a href="/pricing">Pricing</a>
+          <a href="/account">My Account</a>
+        </nav>
+        <div class="sidebarFoot">
+          <span>Current plan</span>
+          <strong id="currentPlan">Free</strong>
+          <small id="freePlanText">3 free scrapes available</small>
+        </div>
+      </aside>
+
+      <main class="appMain">
+        <header class="appTopbar">
+          <div>
+            <p class="eyebrow">Dashboard</p>
+            <h1>Welcome to your scraping workspace</h1>
           </div>
-          <div class="topActions">
-            <button id="accountButton" class="accountButton" type="button">Sign in</button>
-            <button id="downloadButton" class="iconButton" disabled title="Download Excel" aria-label="Download Excel">
-              <span aria-hidden="true">↓</span>
-            </button>
-          </div>
+          <button id="accountButton" class="accountButton" type="button">Sign in</button>
         </header>
 
-        <section id="plans" class="billingBar" aria-label="Plans">
-          <div class="planStatus">
-            <span>Current plan</span>
-            <strong id="currentPlan">Free</strong>
-          </div>
-          <div class="planOptions">
-            <div class="planOption">
-              <strong>Free</strong>
-              <span id="freePlanText">3 scrapes, up to 50 listings each</span>
-            </div>
-            <div class="planOption">
-              <strong>$5/month Category</strong>
-              <span>Complete single-category scrape</span>
-              <button type="button" class="upgradeButton" data-plan="category">Choose Category</button>
-            </div>
-            <div class="planOption featured">
-              <strong>$10/month Full Access</strong>
-              <span>Whole websites and categories</span>
-              <button type="button" class="upgradeButton" data-plan="pro">Choose Full Access</button>
-            </div>
+        <section class="dashboardStats">
+          <div><span>Plan</span><strong id="dashboardPlan">Free</strong><small id="dashboardPlanDetail">50 listings per scrape</small></div>
+          <div><span>Free scrapes</span><strong id="dashboardRemaining">3</strong><small>Remaining on this account</small></div>
+          <div><span>Export</span><strong>Excel</strong><small>Download complete workbooks</small></div>
+        </section>
+
+        <section class="sectionHeading">
+          <div>
+            <p class="eyebrow">Start scraping</p>
+            <h2>Choose a workflow</h2>
           </div>
         </section>
 
-        <section class="scrapeModes" aria-label="Scraping options">
-          <section class="scrapeModePanel">
-            <div class="modeTitle"><h2>Overall Website</h2><span>$10/month plan</span></div>
-            <form class="urlBar scrapeForm" data-mode="website">
-              <input
-                type="url"
-                name="url"
-                aria-label="Overall website URL"
-                placeholder="https://example-store.com/"
-                autocomplete="url"
-                required
-              />
-              <button type="submit">Scrape Website</button>
-            </form>
-          </section>
-
-          <section class="scrapeModePanel">
-            <div class="modeTitle"><h2>Single Category</h2><span>Free preview / $5 monthly</span></div>
-            <form class="urlBar scrapeForm" data-mode="category">
-              <input
-                type="url"
-                name="url"
-                aria-label="Category URL"
-                placeholder="https://example-store.com/category/"
-                autocomplete="url"
-                required
-              />
-              <button type="submit">Scrape Category</button>
-            </form>
-          </section>
+        <section class="workflowGrid">
+          <a class="workflowCard websiteWorkflow" href="/website">
+            <span class="workflowIcon">W</span>
+            <div>
+              <strong>Overall Website</strong>
+              <p>Discover categories and collect products across an entire store.</p>
+            </div>
+            <span class="workflowArrow">→</span>
+          </a>
+          <a class="workflowCard categoryWorkflow" href="/category">
+            <span class="workflowIcon">C</span>
+            <div>
+              <strong>Single Category</strong>
+              <p>Focus on one category and capture every available listing.</p>
+            </div>
+            <span class="workflowArrow">→</span>
+          </a>
         </section>
 
-        <div id="status" class="status" role="status">Ready</div>
-        <div id="exportResult" class="exportResult" hidden></div>
-
-        <section class="stats" aria-label="Scrape counts">
-          <div><span id="listingCount">0</span><small>Listings</small></div>
-          <div><span id="detailCount">0</span><small>Detail pages</small></div>
-          <div><span id="modelCount">0</span><small>Model numbers</small></div>
-          <div><span id="categoryCount">0</span><small>Categories</small></div>
-          <div><span id="apiPageCount">0</span><small>API pages</small></div>
-          <div><span id="imageCount">0</span><small>Images</small></div>
-          <div><span id="linkCount">0</span><small>Links</small></div>
-          <div><span id="metaCount">0</span><small>Metadata</small></div>
+        <section class="dashboardBand">
+          <div>
+            <p class="eyebrow">Built for complete data</p>
+            <h2>Products, images, prices, models and details</h2>
+            <p>Every workflow prepares an Excel-ready dataset with product-page details and all unique listing images.</p>
+          </div>
+          <a class="primaryLink" href="/pricing">Compare plans</a>
         </section>
+      </main>
+    </div>
 
-        <nav class="tabs" aria-label="Data views">
-          <button class="tab active" data-tab="listings" type="button">Listings</button>
-          <button class="tab" data-tab="images" type="button">Images</button>
-          <button class="tab" data-tab="links" type="button">Links</button>
-          <button class="tab" data-tab="metadata" type="button">Metadata</button>
-        </nav>
-
-        <div class="scrollHint">Swipe or drag the table sideways</div>
-        <section class="tableWrap">
-          <table>
-            <thead id="tableHead"></thead>
-            <tbody id="tableBody"></tbody>
-          </table>
-        </section>
-      </section>
-    </main>
     <div id="authModal" class="modalBackdrop" hidden>
       <section class="authModal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
         <button id="closeAuthModal" class="closeButton" type="button" aria-label="Close">×</button>
         <img src="/static/assets/scraper-logo-512.png" alt="" />
         <p class="eyebrow">Welcome</p>
         <h2 id="authTitle">Log in or create your account</h2>
-        <p>Sign in before scraping. New Google users are registered automatically.</p>
-        <a id="googleSignIn" class="googleButton" href="/auth/google">
-          <span class="googleMark">G</span>
-          Continue with Google
-        </a>
-        <small>Your account keeps your access plan connected to you.</small>
+        <p>Sign in with Google to use your free scrapes and keep subscriptions connected to your Gmail.</p>
+        <a class="googleButton" href="/auth/google"><span class="googleMark">G</span>Continue with Google</a>
       </section>
     </div>
-    <script src="/static/app.js?v=20260607-auth-animated"></script>
+    <script src="/static/dashboard.js?v=20260608-dashboard"></script>
   </body>
 </html>

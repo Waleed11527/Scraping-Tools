@@ -371,14 +371,14 @@ const paymentState = new URLSearchParams(window.location.search).get("payment");
 const authState = new URLSearchParams(window.location.search).get("auth");
 if (paymentState === "success") {
   setStatus("Payment confirmed. Your plan is now active.");
-  history.replaceState({}, "", "/");
+  history.replaceState({}, "", window.location.pathname);
 } else if (paymentState === "cancelled") {
   setStatus("Checkout cancelled. No payment was taken.");
-  history.replaceState({}, "", "/");
+  history.replaceState({}, "", window.location.pathname);
 }
 if (authState === "success") {
   setStatus("Google sign-in complete. You can start scraping.");
-  history.replaceState({}, "", "/");
+  history.replaceState({}, "", window.location.pathname);
 } else if (authState === "not-configured") {
   setStatus("Google sign-in is not configured yet.", true);
   showAuthModal();
@@ -387,7 +387,7 @@ if (authState === "success") {
   showAuthModal();
 } else if (authState === "logged-out") {
   setStatus("You have been signed out.");
-  history.replaceState({}, "", "/");
+  history.replaceState({}, "", window.location.pathname);
 }
 
 const tableWrap = document.querySelector(".tableWrap");
