@@ -26,10 +26,18 @@
           <div>
             <p class="eyebrow">Scraping categories</p>
             <h1>Choose the exact type of data you want to scrape</h1>
-            <p class="pageLead">Pick a category below, paste your target URL, and export listing data, images, links, prices, metadata and details to Excel.</p>
+            <p class="pageLead">Search by your target, pick a scraping workflow, paste any matching URL, and export listing data, images, links, prices, metadata and details to Excel.</p>
           </div>
           <a class="primaryLink" href="#how-to-use">How to use</a>
         </header>
+
+        <section class="categorySearchPanel" aria-label="Find scraping category">
+          <div>
+            <p class="eyebrow">Target finder</p>
+            <h2>What do you want to collect?</h2>
+          </div>
+          <input id="categorySearch" type="search" placeholder="Search products, leads, jobs, real estate, images, prices..." autocomplete="off" />
+        </section>
 
         <section id="allCategoryGrid" class="scrapeTypeGrid categoryGrid"></section>
 
@@ -54,6 +62,13 @@
     <script src="/static/scrape-types.js?v=20260608-categories"></script>
     <script>
       renderScrapeTypeCards(document.querySelector("#allCategoryGrid"));
+      const categorySearch = document.querySelector("#categorySearch");
+      categorySearch.addEventListener("input", () => {
+        const query = categorySearch.value.trim().toLowerCase();
+        document.querySelectorAll("[data-category-card]").forEach((card) => {
+          card.hidden = query && !card.dataset.name.toLowerCase().includes(query);
+        });
+      });
     </script>
   </body>
 </html>

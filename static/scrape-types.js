@@ -88,11 +88,21 @@ function renderScrapeTypeCards(container, options = {}) {
   if (!container) return;
   const limit = options.limit || SCRAPE_TYPES.length;
   container.innerHTML = SCRAPE_TYPES.slice(0, limit).map(([slug, name, description]) => `
-    <article class="categoryCard">
+    <article class="categoryCard" data-category-card data-name="${escapeScrapeAttr(`${name} ${description}`)}">
       <span>${name.split(" ").slice(0, 2).map((word) => word[0]).join("")}</span>
       <strong>${name}</strong>
       <p>${description}</p>
       <a class="categoryAction" href="${scrapeTypeHref(slug)}">Start scraping</a>
     </article>
   `).join("");
+}
+
+function escapeScrapeAttr(value) {
+  return String(value).replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;",
+  })[char]);
 }

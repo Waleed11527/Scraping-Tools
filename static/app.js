@@ -241,7 +241,7 @@ async function loadPlan() {
     accountPlan = account.plan || "free";
     currentPlanEl.textContent = account.label || "Free";
     if (freePlanText && account.plan === "free") {
-      freePlanText.textContent = `${account.free_scrapes_remaining ?? 3} of 3 free scrapes remaining · 50 listings each`;
+      freePlanText.textContent = `${account.free_scrapes_remaining ?? 2} of 2 free previews remaining · 3% website data`;
     }
     upgradeButtons.forEach((button) => {
       const selected = button.dataset.plan === accountPlan;
@@ -339,7 +339,8 @@ scrapeForms.forEach((form) => {
     clearExportResult();
     setCounts(null);
     renderTable();
-    setStatus(mode === "website" ? "Starting whole website scrape..." : "Starting category scrape...");
+    const goal = scrapeTypeSelect?.selectedOptions?.[0]?.textContent || "website";
+    setStatus(`Starting ${goal} scrape...`);
 
     try {
       const response = await fetch("/api/scrape", {

@@ -1116,7 +1116,7 @@ td img {
 
 .pricingGrid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 14px;
 }
 
@@ -1205,6 +1205,16 @@ td img {
 
 .accountMain .accountContent {
   display: grid;
+}
+
+@media (max-width: 1180px) {
+  .pricingGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .categorySearchPanel {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 900px) {
@@ -1733,6 +1743,35 @@ body.appBody {
 
 .categoryCard p {
   flex: 1;
+}
+
+.categorySearchPanel {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(280px, 1.2fr);
+  align-items: end;
+  gap: 18px;
+  margin: 0 0 22px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.categorySearchPanel h2 {
+  margin: 4px 0 0;
+  font-size: 22px;
+}
+
+.categorySearchPanel input {
+  width: 100%;
+  min-height: 54px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 16px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-weight: 700;
 }
 
 .categoryAction {

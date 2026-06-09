@@ -39,12 +39,18 @@ async function loadAccount() {
     if (account.lifetime_access) {
       setText("#subscriptionTitle", "Lifetime Full Access");
       setText("#subscriptionDescription", "This Gmail account has permanent access to every scraping feature.");
-    } else if (account.plan === "category") {
-      setText("#subscriptionTitle", "$5/month Category plan");
-      setText("#subscriptionDescription", "Complete category scraping is active for this Google account.");
-    } else if (account.plan === "pro") {
-      setText("#subscriptionTitle", "$10/month Full Access plan");
-      setText("#subscriptionDescription", "Whole website and category scraping are active for this Google account.");
+    } else if (account.plan === "starter") {
+      setText("#subscriptionTitle", "$5/month Starter plan");
+      setText("#subscriptionDescription", "Complete target URL scraping is active for this Google account.");
+    } else if (account.plan === "professional") {
+      setText("#subscriptionTitle", "$15/month Professional plan");
+      setText("#subscriptionDescription", "Complete website, category and detail-page scraping are active for this Google account.");
+    } else if (account.plan === "business") {
+      setText("#subscriptionTitle", "$29/month Business plan");
+      setText("#subscriptionDescription", "High-volume website scraping and all target workflows are active for this Google account.");
+    } else {
+      setText("#subscriptionTitle", "Free Preview plan");
+      setText("#subscriptionDescription", "You can run 2 preview attempts with 3% of website data in each result.");
     }
   } catch {
     loading.textContent = "Could not load your account.";

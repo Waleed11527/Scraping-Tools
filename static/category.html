@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Category Scraper · DataScrape Pro</title>
+    <title>Website Scraper · DataScrape Pro</title>
     <link rel="icon" type="image/png" href="/static/assets/favicon.png" />
     <link rel="stylesheet" href="/static/styles.css?v=20260608-categories" />
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8822154425337823" crossorigin="anonymous"></script>
@@ -19,23 +19,23 @@
           <span class="themeIcon lightIcon">☀</span>
           <span class="themeIcon darkIcon">☾</span>
         </button>
-        <div class="sidebarFoot"><span>Current plan</span><strong id="currentPlan">Free</strong><small>Category workspace</small></div>
+        <div class="sidebarFoot"><span>Current plan</span><strong id="currentPlan">Free</strong><small>Website workspace</small></div>
       </aside>
       <main class="appMain scraperMain">
         <header class="appTopbar">
-          <div><p class="eyebrow" id="selectedTypeEyebrow">Category scraper</p><h1 id="selectedTypeTitle">Capture every listing in one category</h1><p class="pageLead" id="selectedTypeDescription">Paste a category URL to collect product details, model numbers and all unique images.</p></div>
+          <div><p class="eyebrow" id="selectedTypeEyebrow">Website scraper</p><h1 id="selectedTypeTitle">Capture target data from any website link</h1><p class="pageLead" id="selectedTypeDescription">Paste a storefront, category, listing, search result or public page URL to collect structured data and export it to Excel.</p></div>
           <div class="topActions">
             <button id="accountButton" class="accountButton" type="button">Sign in</button>
             <button id="downloadButton" class="downloadButton" disabled title="Download Excel" aria-label="Download Excel">Download</button>
           </div>
         </header>
         <section class="typePickerPanel">
-          <label for="scrapeTypeSelect">Scraping category</label>
+          <label for="scrapeTypeSelect">Scraping goal</label>
           <select id="scrapeTypeSelect" class="typeSelect"></select>
           <a class="secondaryLink" href="/categories">View all categories</a>
         </section>
         <section class="typeProfilePanel">
-          <article><span>Best URL</span><strong id="selectedTypeUrlHint">Category URL</strong></article>
+          <article><span>Best URL</span><strong id="selectedTypeUrlHint">Website or target URL</strong></article>
           <article><span>Extraction focus</span><strong id="selectedTypeFocus">Listings, images, prices and metadata</strong></article>
           <article><span>Result</span><strong>Excel workbook</strong></article>
         </section>
@@ -43,10 +43,10 @@
           <span>Listings</span><span>All images</span><span>Model numbers</span><span>Prices</span><span>Stock</span><span>Descriptions</span><span>Links</span><span>Metadata</span>
         </section>
         <section class="scraperCommand">
-          <div class="commandMeta"><span>Category URL</span><strong>Free preview · $5/month complete</strong></div>
-          <form class="urlBar scrapeForm" data-mode="category">
-            <input type="url" name="url" aria-label="Category URL" placeholder="https://example-store.com/category/" autocomplete="url" required />
-            <button type="submit">Scrape Category</button>
+          <div class="commandMeta"><span>Website or target URL</span><strong>Free preview: 3% data · 2 attempts</strong></div>
+          <form class="urlBar scrapeForm" data-mode="auto">
+            <input type="url" name="url" aria-label="Website or target URL" placeholder="https://example-store.com/" autocomplete="url" required />
+            <button type="submit">Scrape Website</button>
           </form>
         </section>
         <div id="status" class="status statusBar" role="status">Ready to scrape</div>
