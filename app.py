@@ -34,23 +34,11 @@ BILLING_SECRET = os.environ.get("BILLING_SECRET", "")
 GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
 GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
 AUTH_SECRET = os.environ.get("AUTH_SECRET", "")
-FREE_PREVIEW_PERCENT = 3
-FREE_SCRAPE_LIMIT = 2
+FREE_ITEM_LIMIT = 50
+FREE_SCRAPE_LIMIT = 3
 SUBSCRIPTION_SECONDS = 31 * 24 * 60 * 60
-PAID_PLANS = {"starter", "professional", "business"}
-PLAN_ALIASES = {"category": "starter", "pro": "professional"}
-PLAN_PRICES = {"starter": 500, "professional": 1500, "business": 2900}
-PLAN_LABELS = {
-    "free": "Free Preview",
-    "starter": "Starter",
-    "professional": "Professional",
-    "business": "Business",
-}
-PLAN_PRODUCT_NAMES = {
-    "starter": "Monthly Starter Website Scraping Access",
-    "professional": "Monthly Professional Website Scraping Access",
-    "business": "Monthly Business Website Scraping Access",
-}
+PLAN_PRICES = {"category": 500, "pro": 1000}
+PLAN_LABELS = {"free": "Free", "category": "Category", "pro": "Full Access"}
 LIFETIME_FREE_EMAILS = {"waleedk4pak@gmail.com"}
 ACCESS_COOKIE = "scraper_access"
 SESSION_COOKIE = "scraper_session"
@@ -212,6 +200,8 @@ def update_job(job_id, **updates):
 def create_scrape_job(url, mode="auto", plan="free", user_email="", scrape_type=""):
     if mode not in {"auto", "website", "category"}:
         raise ValueError("Invalid scrape mode.")
+    if plan == "category" and mode != "category":
+        raise ValueError("The $5 Category plan only supports Single Category scraping.")
     job_id = str(uuid.uuid4())
     with JOBS_LOCK:
         JOBS[job_id] = {
@@ -276,7 +266,7 @@ def decode_signed_payload(value):
 
 def encode_access_cookie(plan, email):
     return encode_signed_payload(
-        {"plan": normalize_plan(plan), "email": email, "issued_at": int(time.time())}
+        {"plan": plan, "email": email, "issued_at": int(time.time())}
     )
 
 
@@ -309,11 +299,6 @@ def oauth_request(url, fields=None, access_token=""):
 
 def normalize_email(value):
     return clean_text(value).lower()
-
-
-def normalize_plan(plan):
-    plan = clean_text(plan or "free").lower()
-    return PLAN_ALIASES.get(plan, plan)
 
 
 def empty_accounts_db():
@@ -361,7 +346,7 @@ def apply_lifetime_access(account):
     email = normalize_email(account.get("email", ""))
     account["lifetime_access"] = email in LIFETIME_FREE_EMAILS
     if account["lifetime_access"]:
-        account["plan"] = "business"
+        account["plan"] = "pro"
         account["plan_status"] = "lifetime"
         account["subscription_id"] = account.get("subscription_id", "")
         account["subscription_expires_at"] = 0
@@ -407,10 +392,10 @@ def account_effective_plan(account):
     if not account:
         return "free"
     if account.get("lifetime_access"):
-        return "business"
-    plan = normalize_plan(account.get("plan", "free"))
+        return "pro"
+    plan = account.get("plan", "free")
     expires_at = int(account.get("subscription_expires_at") or 0)
-    if plan in PAID_PLANS and expires_at > time.time():
+    if plan in {"category", "pro"} and expires_at > time.time():
         return plan
     return "free"
 
@@ -439,7 +424,7 @@ def account_public(account):
 
 def activate_subscription(email, plan, subscription_id):
     def updater(account):
-        account["plan"] = normalize_plan(plan)
+        account["plan"] = plan
         account["plan_status"] = "active"
         account["subscription_id"] = subscription_id or account.get("subscription_id", "")
         account["subscription_expires_at"] = int(time.time()) + SUBSCRIPTION_SECONDS
@@ -499,24 +484,12 @@ def increment_free_scrape(email):
 
 
 def apply_plan_limit(data, plan):
-    plan = normalize_plan(plan)
     if plan != "free":
         data["plan"] = plan
         return data
-
-    def preview_count(total):
-        if total <= 0:
-            return 0
-        return max(1, (total * FREE_PREVIEW_PERCENT + 99) // 100)
-
-    def preview_slice(items):
-        values = list(items or [])
-        return values[:preview_count(len(values))]
-
     listings = list(data.get("listings", []))
-    listing_limit = preview_count(len(listings))
-    truncated = len(listings) > listing_limit
-    data["listings"] = listings[:listing_limit]
+    truncated = len(listings) > FREE_ITEM_LIMIT
+    data["listings"] = listings[:FREE_ITEM_LIMIT]
     product_images = []
     seen_images = set()
     for listing in data["listings"]:
@@ -529,27 +502,15 @@ def apply_plan_limit(data, plan):
             )
     if product_images:
         data["images"] = product_images
-    else:
-        data["images"] = preview_slice(data.get("images", []))
-    for key in ("links", "metadata", "structured_data", "categories"):
-        if key in data:
-            data[key] = preview_slice(data.get(key, []))
     counts = data.setdefault("counts", {})
     counts["listings"] = len(data["listings"])
     counts["model_numbers"] = sum(1 for row in data["listings"] if row.get("model_number"))
     counts["detail_pages"] = min(counts.get("detail_pages", 0), len(data["listings"]))
     counts["images"] = len(data.get("images", []))
-    counts["links"] = len(data.get("links", []))
-    counts["metadata"] = len(data.get("metadata", []))
-    counts["categories"] = len(data.get("categories", []))
     data["plan"] = "free"
-    data["free_preview_percent"] = FREE_PREVIEW_PERCENT
-    data["free_limit"] = listing_limit
+    data["free_limit"] = FREE_ITEM_LIMIT
     if truncated:
-        notice = (
-            f"Free plan includes a {FREE_PREVIEW_PERCENT}% website preview. "
-            "Upgrade to export the complete result."
-        )
+        notice = f"Free plan includes the first {FREE_ITEM_LIMIT} listings. Upgrade to export the complete result."
         data["warning"] = sanitize_warning(" ".join(filter(None, [data.get("warning"), notice])))
     return data
 
@@ -1395,8 +1356,10 @@ def extract_shopify_products(html, final_url, mode="auto", progress=None):
         return None
     base_url = shopify_base_url(final_url)
     collection_handle = shopify_collection_handle(final_url)
+    if mode == "category" and not collection_handle:
+        raise ValueError("Please paste a Shopify collection/category link for Single Category mode.")
 
-    if collection_handle and (mode == "category" or mode == "auto"):
+    if mode == "category" or (mode == "auto" and collection_handle):
         endpoint = f"{base_url}/collections/{urllib.parse.quote(collection_handle)}/products.json"
         products, api_pages = fetch_shopify_pages(endpoint, "products", progress, "collection products")
         category = {
@@ -1927,8 +1890,8 @@ class AppHandler(BaseHTTPRequestHandler):
             return self.send_json(
                 {
                     "plan": plan,
-                    "label": PLAN_LABELS.get(plan, "Free Preview"),
-                    "free_preview_percent": FREE_PREVIEW_PERCENT,
+                    "label": PLAN_LABELS[plan],
+                    "free_item_limit": FREE_ITEM_LIMIT,
                     "free_scrape_limit": FREE_SCRAPE_LIMIT,
                     "free_scrapes_remaining": (public_account or {}).get("free_scrapes_remaining", FREE_SCRAPE_LIMIT),
                     "monthly": True,
@@ -2006,8 +1969,8 @@ class AppHandler(BaseHTTPRequestHandler):
             if not session_id:
                 return self.redirect("/?payment=missing")
             session = stripe_request("GET", f"/v1/checkout/sessions/{urllib.parse.quote(session_id)}")
-            plan = normalize_plan((session.get("metadata") or {}).get("plan"))
-            if session.get("payment_status") not in {"paid", "no_payment_required"} or plan not in PAID_PLANS:
+            plan = (session.get("metadata") or {}).get("plan")
+            if session.get("payment_status") not in {"paid", "no_payment_required"} or plan not in {"category", "pro"}:
                 return self.redirect("/?payment=unconfirmed")
             session_email = (session.get("metadata") or {}).get("email")
             if normalize_email(session_email) != normalize_email(user.get("email")):
@@ -2074,7 +2037,7 @@ class AppHandler(BaseHTTPRequestHandler):
                 if plan == "free" and int(account.get("free_scrapes_used") or 0) >= FREE_SCRAPE_LIMIT:
                     return self.send_json(
                         {
-                            "error": "Your 2 free preview attempts are finished. Upgrade to a monthly plan to continue.",
+                            "error": "Your 3 free scrapes are finished. Upgrade to a monthly plan to continue.",
                             "upgrade_required": True,
                         },
                         402,
@@ -2101,8 +2064,8 @@ class AppHandler(BaseHTTPRequestHandler):
                 if not user:
                     return
                 payload = self.read_json()
-                plan = normalize_plan(payload.get("plan"))
-                if plan not in PAID_PLANS:
+                plan = payload.get("plan")
+                if plan not in {"category", "pro"}:
                     raise ValueError("Choose a valid paid plan.")
                 origin = self.public_origin()
                 session = stripe_request(
@@ -2116,7 +2079,9 @@ class AppHandler(BaseHTTPRequestHandler):
                         "line_items[0][price_data][currency]": "usd",
                         "line_items[0][price_data][unit_amount]": str(PLAN_PRICES[plan]),
                         "line_items[0][price_data][recurring][interval]": "month",
-                        "line_items[0][price_data][product_data][name]": PLAN_PRODUCT_NAMES[plan],
+                        "line_items[0][price_data][product_data][name]": (
+                            "Monthly Category Scraping Access" if plan == "category" else "Monthly Full Website Scraping Access"
+                        ),
                         "metadata[plan]": plan,
                         "metadata[email]": user.get("email"),
                         "customer_email": user.get("email"),
@@ -2219,6 +2184,8 @@ class AppHandler(BaseHTTPRequestHandler):
         if not isinstance(data, dict):
             raise ValueError("Invalid export data.")
         plan = self.current_plan()
+        if plan == "category" and data.get("scrape_mode") != "category":
+            raise ValueError("The $5 Category plan can only export Single Category results.")
         return apply_plan_limit(data, plan)
 
     def cookie_header(self, name, value, max_age):

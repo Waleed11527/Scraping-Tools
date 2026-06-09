@@ -61,7 +61,7 @@ async function loadPricing() {
   accountButton.textContent = currentUser ? "My Account" : "Sign in";
   document.querySelector("#currentPlan").textContent = plan.label || "Free";
   document.querySelector("#planFootnote").textContent =
-    currentPlan === "free" ? `${plan.free_scrapes_remaining ?? 2} preview attempts · 3% data` : "Subscription active";
+    currentPlan === "free" ? `${plan.free_scrapes_remaining ?? 3} free scrapes remaining` : "Subscription active";
   buttons.forEach((button) => {
     if (button.dataset.plan === currentPlan) {
       button.disabled = true;

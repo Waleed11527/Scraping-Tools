@@ -36,11 +36,11 @@ async function loadDashboard() {
   document.querySelector("#currentPlan").textContent = plan.label || "Free";
   document.querySelector("#dashboardPlan").textContent = plan.label || "Free";
   document.querySelector("#dashboardRemaining").textContent =
-    plan.plan === "free" ? (plan.free_scrapes_remaining ?? 2) : "Unlimited";
+    plan.plan === "free" ? (plan.free_scrapes_remaining ?? 3) : "Unlimited";
   document.querySelector("#freePlanText").textContent =
-    plan.plan === "free" ? `${plan.free_scrapes_remaining ?? 2} preview attempts remaining · 3% data` : "Unlimited scraping active";
+    plan.plan === "free" ? `${plan.free_scrapes_remaining ?? 3} free scrapes remaining` : "Unlimited scraping active";
   document.querySelector("#dashboardPlanDetail").textContent =
-    plan.plan === "free" ? "3% website preview" : "Complete datasets enabled";
+    plan.plan === "free" ? "50 listings per scrape" : "Complete datasets enabled";
 }
 
 loadDashboard().catch(() => {});
