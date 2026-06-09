@@ -3,8 +3,6 @@ const authModal = document.querySelector("#authModal");
 const closeAuthModal = document.querySelector("#closeAuthModal");
 let currentUser = null;
 
-renderScrapeTypeCards(document.querySelector("#categoryPreviewGrid"), { limit: 12 });
-
 function showAuthModal() {
   authModal.hidden = false;
   document.body.classList.add("modalOpen");

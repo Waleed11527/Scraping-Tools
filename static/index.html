@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Dashboard · DataScrape Pro</title>
     <link rel="icon" type="image/png" href="/static/assets/favicon.png" />
-    <link rel="stylesheet" href="/static/styles.css?v=20260608-categories" />
+    <link rel="stylesheet" href="/static/styles.css?v=20260608-theme" />
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8822154425337823" crossorigin="anonymous"></script>
   </head>
   <body class="appBody" data-theme="light">
@@ -17,7 +17,8 @@
         </a>
         <nav class="sidebarNav" aria-label="Main navigation">
           <a class="active" href="/">Dashboard</a>
-          <a href="/categories">Categories</a>
+          <a href="/website">Overall Website</a>
+          <a href="/category">Single Category</a>
           <a href="/pricing">Pricing</a>
           <a href="/account">My Account</a>
         </nav>
@@ -63,27 +64,43 @@
         <section class="sectionHeading">
           <div>
             <p class="eyebrow">Start scraping</p>
-            <h2>Choose a category</h2>
+            <h2>Choose a workflow</h2>
           </div>
-          <a class="primaryLink" href="/categories">View all categories</a>
+        </section>
+
+        <section class="workflowGrid">
+          <a class="workflowCard websiteWorkflow" href="/website">
+            <span class="workflowIcon">W</span>
+            <div>
+              <strong>Overall Website</strong>
+              <p>Discover categories and collect products across an entire store.</p>
+            </div>
+            <span class="workflowArrow">→</span>
+          </a>
+          <a class="workflowCard categoryWorkflow" href="/category">
+            <span class="workflowIcon">C</span>
+            <div>
+              <strong>Single Category</strong>
+              <p>Focus on one category and capture every available listing.</p>
+            </div>
+            <span class="workflowArrow">→</span>
+          </a>
         </section>
 
         <section class="scrapeTypeSection">
-          <div id="categoryPreviewGrid" class="scrapeTypeGrid categoryGrid compactCategoryGrid"></div>
-        </section>
-
-        <section class="howToSection" id="how-to-use">
           <div class="sectionHeading">
             <div>
-              <p class="eyebrow">How to use</p>
-              <h2>Scrape data in four steps</h2>
+              <p class="eyebrow">All scraping types</p>
+              <h2>Built for every data job</h2>
             </div>
           </div>
-          <div class="howToGrid">
-            <article><span>01</span><strong>Pick a category</strong><p>Choose the scraping type that matches your target website or data job.</p></article>
-            <article><span>02</span><strong>Paste the website link</strong><p>Add the category, search, product-listing or website URL you want to extract.</p></article>
-            <article><span>03</span><strong>Run the scraper</strong><p>The app collects listings, details, images, prices, links, metadata and model numbers.</p></article>
-            <article><span>04</span><strong>Download Excel</strong><p>Review the table, swipe across columns, then export the final workbook.</p></article>
+          <div class="scrapeTypeGrid">
+            <article><span>EC</span><strong>E-commerce products</strong><p>Titles, prices, sale prices, stock, brands, SKUs and model numbers.</p></article>
+            <article><span>IM</span><strong>Images and galleries</strong><p>Collect unique listing images without repeating the same image many times.</p></article>
+            <article><span>PR</span><strong>Price monitoring</strong><p>Capture regular price, sale price and detail-page price fields.</p></article>
+            <article><span>LK</span><strong>Links and metadata</strong><p>Export page links, canonical URLs, meta descriptions and structured fields.</p></article>
+            <article><span>RE</span><strong>Real estate listings</strong><p>Use category scraping for property grids, cards and product-style pages.</p></article>
+            <article><span>TB</span><strong>Tables and catalogs</strong><p>Use the generic scraper engine to pull rows from product tables and listings.</p></article>
           </div>
         </section>
 
@@ -93,7 +110,7 @@
             <h2>Products, images, prices, models and details</h2>
             <p>Every workflow prepares an Excel-ready dataset with product-page details and all unique listing images.</p>
           </div>
-          <a class="primaryLink" href="/categories">Start now</a>
+          <a class="primaryLink" href="/pricing">Compare plans</a>
         </section>
       </main>
     </div>
@@ -108,8 +125,7 @@
         <a class="googleButton" href="/auth/google"><span class="googleMark">G</span>Continue with Google</a>
       </section>
     </div>
-    <script src="/static/theme.js?v=20260608-categories"></script>
-    <script src="/static/scrape-types.js?v=20260608-categories"></script>
-    <script src="/static/dashboard.js?v=20260608-categories"></script>
+    <script src="/static/theme.js?v=20260608-theme"></script>
+    <script src="/static/dashboard.js?v=20260608-theme"></script>
   </body>
 </html>

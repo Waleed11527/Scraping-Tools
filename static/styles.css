@@ -1722,109 +1722,6 @@ body.appBody {
   font-size: 18px;
 }
 
-.compactCategoryGrid .categoryCard:nth-child(n + 13) {
-  display: none;
-}
-
-.categoryCard {
-  display: flex;
-  flex-direction: column;
-}
-
-.categoryCard p {
-  flex: 1;
-}
-
-.categoryAction {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: fit-content;
-  min-height: 38px;
-  margin-top: 14px;
-  padding: 0 14px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, var(--accent), var(--violet));
-  color: #fff;
-  font-size: 13px;
-  font-weight: 800;
-  text-decoration: none;
-}
-
-.howToSection {
-  margin: 46px 0;
-}
-
-.howToGrid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
-}
-
-.howToGrid article,
-.typePickerPanel {
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.018)),
-    rgba(24, 24, 31, 0.86);
-  color: var(--ink);
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.18);
-}
-
-.howToGrid article {
-  min-height: 170px;
-  padding: 20px;
-}
-
-.howToGrid span {
-  display: inline-grid;
-  place-items: center;
-  width: 42px;
-  height: 42px;
-  margin-bottom: 18px;
-  border-radius: 50%;
-  background: rgba(99, 102, 241, 0.14);
-  color: var(--accent-dark);
-  font-weight: 900;
-}
-
-.howToGrid strong {
-  display: block;
-  margin-bottom: 8px;
-  font-size: 18px;
-}
-
-.howToGrid p {
-  margin: 0;
-  color: var(--muted);
-}
-
-.typePickerPanel {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(220px, 360px) auto;
-  gap: 12px;
-  align-items: center;
-  margin: -6px 0 20px;
-  padding: 16px;
-}
-
-.typePickerPanel label {
-  color: var(--muted);
-  font-weight: 800;
-}
-
-.typeSelect {
-  width: 100%;
-  min-height: 44px;
-  padding: 0 13px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: rgba(8, 8, 12, 0.72);
-  color: var(--ink);
-  font: inherit;
-}
-
 .dashboardBand {
   border-color: rgba(99, 102, 241, 0.34);
   border-radius: 22px;
@@ -1996,10 +1893,6 @@ td a {
     grid-template-columns: 1fr;
   }
 
-  .howToGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .pricingGrid {
     grid-template-columns: 1fr;
   }
@@ -2069,9 +1962,7 @@ td a {
 
   .consoleGrid,
   .dashboardBand,
-  .commandMeta,
-  .typePickerPanel,
-  .howToGrid {
+  .commandMeta {
     display: grid;
     grid-template-columns: 1fr;
   }
@@ -2145,8 +2036,6 @@ td a {
 .appBody[data-theme="light"] .workflowCard,
 .appBody[data-theme="light"] .dashboardBand,
 .appBody[data-theme="light"] .scraperCommand,
-.appBody[data-theme="light"] .typePickerPanel,
-.appBody[data-theme="light"] .howToGrid article,
 .appBody[data-theme="light"] .statusBar,
 .appBody[data-theme="light"] .tableWrap,
 .appBody[data-theme="light"] .priceCard,
@@ -2199,11 +2088,6 @@ td a {
 
 .appBody[data-theme="light"] .urlBar {
   background: #ffffff;
-}
-
-.appBody[data-theme="light"] .typeSelect {
-  background: #ffffff;
-  color: var(--ink);
 }
 
 .appBody[data-theme="light"] .urlBar input {
