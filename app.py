@@ -49,6 +49,8 @@ MAX_SALLA_PRODUCTS = 500
 MAX_SALLA_CATEGORIES = 120
 MAX_SALLA_TOTAL_ROWS = 5000
 SALLA_DETAIL_WORKERS = 6
+MAX_CATALOG_DISCOVERY_PAGES = 40
+MAX_CATALOG_TOTAL_ROWS = 5000
 MAX_SHOPIFY_PRODUCTS = 5000
 MAX_SHOPIFY_COLLECTIONS = 1000
 SHOPIFY_PAGE_SIZE = 250
@@ -936,6 +938,19 @@ def image_list(product):
     return unique
 
 
+def image_list_from_values(value):
+    urls = []
+    collect_image_urls(value, urls)
+    unique = []
+    seen = set()
+    for url in urls:
+        key = canonical_image_key(url)
+        if url and key not in seen:
+            seen.add(key)
+            unique.append(url)
+    return unique
+
+
 def add_image_columns(row, images):
     for index, image_url in enumerate(images, start=1):
         row[f"image_{index}"] = image_url
@@ -1579,6 +1594,266 @@ def extract_link_image_listings(root, base_url):
     return candidates[:500]
 
 
+def region_prefix_from_url(url):
+    path_parts = [part for part in urllib.parse.urlparse(url).path.split("/") if part]
+    if path_parts and re.fullmatch(r"[a-z]{2}(?:-[a-z]{2})?", path_parts[0], re.I):
+        return f"/{path_parts[0]}"
+    return ""
+
+
+def product_url_from_slug(base_url, slug):
+    slug = clean_text(slug).strip("/")
+    if not slug:
+        return ""
+    parsed = urllib.parse.urlparse(base_url)
+    prefix = region_prefix_from_url(base_url)
+    return urllib.parse.urlunparse((parsed.scheme, parsed.netloc, f"{prefix}/products/{slug}", "", "", ""))
+
+
+def normalize_embedded_product_hit(hit, base_url, source_url=""):
+    variants = hit.get("variants") if isinstance(hit.get("variants"), list) else []
+    first_variant = variants[0] if variants and isinstance(variants[0], dict) else {}
+    images = image_list_from_values(hit)
+    taxons = hit.get("taxons") if isinstance(hit.get("taxons"), list) else []
+    category_names = []
+    for taxon in taxons:
+        if isinstance(taxon, dict) and taxon.get("name"):
+            category_names.append(scalar_or_json(taxon.get("name")))
+    skus = [
+        scalar_or_json(variant.get("sku"))
+        for variant in variants
+        if isinstance(variant, dict) and variant.get("sku")
+    ]
+    prices = []
+    regular_prices = []
+    for variant in variants:
+        if not isinstance(variant, dict):
+            continue
+        for key, target in (("price", prices), ("list_price", regular_prices)):
+            try:
+                target.append(float(variant.get(key)))
+            except (TypeError, ValueError):
+                pass
+    price = min(prices) if prices else first_variant.get("price", "")
+    regular_price = min(regular_prices) if regular_prices else first_variant.get("list_price", "")
+    product_url = product_url_from_slug(base_url, hit.get("slug") or "")
+    row = {
+        "title": scalar_or_json(hit.get("name") or first_variant.get("name")),
+        "name": scalar_or_json(hit.get("name") or first_variant.get("name")),
+        "product_id": scalar_or_json(hit.get("id") or hit.get("objectID")),
+        "model_number": skus[0] if skus else "",
+        "sku": skus[0] if skus else scalar_or_json(first_variant.get("sku")),
+        "all_skus": " | ".join(dict.fromkeys(skus)),
+        "price": scalar_or_json(price),
+        "regular_price": scalar_or_json(regular_price),
+        "sale_price": scalar_or_json(price if regular_price and price and str(price) != str(regular_price) else ""),
+        "brand": "Castlery" if "castlery." in urllib.parse.urlparse(base_url).netloc else "",
+        "category": " | ".join(dict.fromkeys(category_names)),
+        "availability": scalar_or_json(first_variant.get("lead_time_presentation")),
+        "is_available": scalar_or_json(bool(first_variant.get("available_quantity")) if "available_quantity" in first_variant else ""),
+        "quantity": scalar_or_json(first_variant.get("available_quantity")),
+        "image": images[0] if images else "",
+        "image_count": len(images),
+        "all_images": " | ".join(images),
+        "url": product_url,
+        "source_category_url": source_url,
+        "source": "embedded_product_search",
+        "variant_count": len(variants),
+        "detail_status": "OK",
+        "all_product_json": json.dumps(hit, ensure_ascii=False),
+    }
+    add_image_columns(row, images)
+    if isinstance(first_variant.get("properties"), dict):
+        for key, value in first_variant["properties"].items():
+            row[f"property_{key}"] = scalar_or_json(value)
+    return row
+
+
+def extract_embedded_search_products(html, final_url):
+    rows = []
+    categories = []
+    warnings = []
+    api_pages = 0
+    for match in re.finditer(
+        r'window\[Symbol\.for\("InstantSearchInitialResults"\)\]\s*=\s*(\{[\s\S]*?\})</script>',
+        html,
+    ):
+        try:
+            data = json.loads(match.group(1))
+        except json.JSONDecodeError:
+            continue
+        for index_data in data.values():
+            if not isinstance(index_data, dict):
+                continue
+            for result in index_data.get("results") or []:
+                if not isinstance(result, dict):
+                    continue
+                hits = result.get("hits") or []
+                if not isinstance(hits, list) or not hits:
+                    continue
+                api_pages = max(api_pages, int(result.get("nbPages") or 1))
+                total_hits = int(result.get("nbHits") or len(hits))
+                for hit in hits:
+                    if isinstance(hit, dict):
+                        rows.append(normalize_embedded_product_hit(hit, final_url, final_url))
+                if total_hits > len(hits):
+                    warnings.append(
+                        f"{final_url} exposes {total_hits} product results but only {len(hits)} are server-rendered on the page."
+                    )
+                facets = result.get("facets") or {}
+                category_facet = facets.get("category") if isinstance(facets, dict) else {}
+                if isinstance(category_facet, dict):
+                    for name, count in category_facet.items():
+                        categories.append({"name": name, "products_found": count, "url": final_url})
+    return {"rows": rows, "api_pages": api_pages, "warnings": warnings, "categories": categories}
+
+
+def product_link_title_from_url(url):
+    path = urllib.parse.unquote(urllib.parse.urlparse(url).path)
+    slug = path.rstrip("/").split("/")[-1]
+    return clean_text(slug.replace("-", " ").title())
+
+
+def extract_product_link_listings(root, base_url):
+    rows = []
+    seen = set()
+    for node in walk(root):
+        if node.tag != "a":
+            continue
+        detail_url = absolutize(base_url, node.attr("href"))
+        if not detail_url or detail_url in seen or not same_site(detail_url, base_url):
+            continue
+        if not re.search(r"/products?/", urllib.parse.urlparse(detail_url).path, re.I):
+            continue
+        seen.add(detail_url)
+        text = node.text()
+        image_url, image_alt = first_image(node, base_url)
+        title = clean_text(text or image_alt or product_link_title_from_url(detail_url))
+        rows.append(
+            {
+                "title": title[:240],
+                "name": title[:240],
+                "price": first_price(text),
+                "image": image_url,
+                "image_alt": image_alt,
+                "url": detail_url,
+                "description": clean_text(text)[:1500],
+                "source": "product_link",
+            }
+        )
+    return rows[:1000]
+
+
+def catalog_link_score(url, text=""):
+    parsed = urllib.parse.urlparse(url)
+    path = urllib.parse.unquote(parsed.path).lower()
+    if not path or re.search(r"/(?:products?|cart|wishlist|account|login|blog|help|contact|reviews|terms|privacy|delivery|warranty|showrooms?|press|careers|sitemap|accessibility)(?:/|$)", path):
+        return 0
+    score = 0
+    if any(token in path for token in ("/sofas", "/tables", "/chairs", "/beds", "/storage", "/outdoor", "/accessories", "/furniture-sets", "/sale", "/new", "/collections")):
+        score += 4
+    if any(token in path for token in ("all-", "all_", "bestsellers", "sale", "sets", "furniture", "tables", "sofas", "chairs", "beds", "mirrors", "rugs")):
+        score += 2
+    if text and re.search(r"\b(shop|all|sofas|tables|chairs|beds|storage|outdoor|accessories|sale|collection)\b", text, re.I):
+        score += 1
+    return score
+
+
+def discover_catalog_urls(parser, final_url, html):
+    found = {}
+
+    def add(url, name=""):
+        catalog_url = absolutize(final_url, url).rstrip("\\")
+        if not catalog_url or not same_site(catalog_url, final_url):
+            return
+        score = catalog_link_score(catalog_url, name)
+        if score <= 0:
+            return
+        current = found.get(catalog_url)
+        if not current or score > current["score"]:
+            found[catalog_url] = {"url": catalog_url, "name": clean_text(name) or product_link_title_from_url(catalog_url), "score": score}
+
+    for link in parser.links:
+        add(link.get("href", ""), link.get("text", ""))
+    for match in re.finditer(r'"url"\s*:\s*"([^"]+)"(?:[^{}]{0,300}?"name"\s*:\s*"([^"]+)")?', html):
+        add(match.group(1).encode("utf-8").decode("unicode_escape"), match.group(2) or "")
+
+    ranked = sorted(found.values(), key=lambda item: (-item["score"], item["url"]))
+    return [{"url": item["url"], "name": item["name"]} for item in ranked[:MAX_CATALOG_DISCOVERY_PAGES]]
+
+
+def merge_listing_rows(existing, incoming):
+    by_url = {row.get("url"): row for row in existing if row.get("url")}
+    for row in incoming:
+        url = row.get("url")
+        if not url:
+            existing.append(row)
+            continue
+        current = by_url.get(url)
+        if not current:
+            by_url[url] = row
+            existing.append(row)
+            continue
+        for key, value in row.items():
+            if value and not current.get(key):
+                current[key] = value
+    return existing
+
+
+def extract_catalog_page_products(html, final_url, source_url=""):
+    parser = SiteParser()
+    parser.feed(html)
+    platform = extract_embedded_search_products(html, final_url)
+    rows = platform["rows"] or extract_product_link_listings(parser.root, final_url)
+    for row in rows:
+        row.setdefault("source_category_url", source_url or final_url)
+    return {
+        "rows": rows,
+        "api_pages": platform.get("api_pages", 0),
+        "warnings": platform.get("warnings", []),
+        "categories": platform.get("categories", []),
+    }
+
+
+def extract_generic_website_catalog(html, final_url, parser, progress=None):
+    categories = discover_catalog_urls(parser, final_url, html)
+    if not categories:
+        return None
+    rows = []
+    warnings = []
+    api_pages = 0
+    category_summaries = []
+    for index, category in enumerate(categories, start=1):
+        if len(rows) >= MAX_CATALOG_TOTAL_ROWS:
+            warnings.append(f"Overall website safety limit reached at {MAX_CATALOG_TOTAL_ROWS} product rows.")
+            break
+        if progress:
+            progress(
+                f"Scanning catalog page {index}/{len(categories)}: {category['name']}",
+                {"categories": len(categories), "category_index": index, "listings": len(rows), "api_pages": api_pages},
+            )
+        try:
+            category_url, category_html, _, category_warning = fetch_url(category["url"])
+        except ValueError as exc:
+            warnings.append(str(exc))
+            continue
+        result = extract_catalog_page_products(category_html, category_url, category["url"])
+        if category_warning:
+            warnings.append(category_warning)
+        warnings.extend(result.get("warnings", []))
+        api_pages += result.get("api_pages", 0) or 1
+        before = len(rows)
+        merge_listing_rows(rows, result.get("rows", []))
+        found_count = len(rows) - before
+        category_summaries.append({"name": category["name"], "url": category["url"], "products_found": found_count})
+    return {
+        "rows": rows,
+        "api_pages": api_pages,
+        "warnings": warnings,
+        "categories": category_summaries,
+    } if rows else None
+
+
 def flatten_structured_item(item):
     if not isinstance(item, dict):
         return {}
@@ -1624,6 +1899,12 @@ def extract_site_data(url, progress=None, mode="auto"):
         else:
             salla_site_result = extract_salla_site_products(html, final_url, progress=progress)
             platform_result = salla_site_result or extract_salla_products(html, final_url, progress=progress)
+    if not platform_result:
+        embedded_result = extract_embedded_search_products(html, final_url)
+        if embedded_result.get("rows"):
+            platform_result = embedded_result
+    if not platform_result and mode == "website":
+        platform_result = extract_generic_website_catalog(html, final_url, parser, progress=progress)
     categories = platform_result.get("categories", []) if platform_result else []
     if platform_result:
         listings = platform_result["rows"]
@@ -1640,7 +1921,9 @@ def extract_site_data(url, progress=None, mode="auto"):
                         product_images.append({"src": image_url, "alt": listing.get("title", ""), "title": listing.get("title", "")})
             images = product_images[:1000]
     else:
-        listings = extract_listings(parser.root, final_url)
+        listings = extract_product_link_listings(parser.root, final_url)
+        if not listings:
+            listings = extract_listings(parser.root, final_url)
         if not listings:
             listings = extract_link_image_listings(parser.root, final_url)
         api_pages = 0
