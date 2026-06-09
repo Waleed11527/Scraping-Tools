@@ -16,6 +16,9 @@ const scrapeTypeSelect = document.querySelector("#scrapeTypeSelect");
 const selectedTypeEyebrow = document.querySelector("#selectedTypeEyebrow");
 const selectedTypeTitle = document.querySelector("#selectedTypeTitle");
 const selectedTypeDescription = document.querySelector("#selectedTypeDescription");
+const selectedTypeUrlHint = document.querySelector("#selectedTypeUrlHint");
+const selectedTypeFocus = document.querySelector("#selectedTypeFocus");
+const primaryUrlInput = document.querySelector(".scrapeForm input[name='url']");
 
 let scrapeData = null;
 let accountPlan = "free";
@@ -67,15 +70,18 @@ const columns = {
 
 function setSelectedScrapeType(slug) {
   if (!scrapeTypeSelect || !window.SCRAPE_TYPES) return;
-  const [typeSlug, typeName, typeDescription] = findScrapeType(slug);
-  scrapeTypeSelect.value = typeSlug;
-  if (selectedTypeEyebrow) selectedTypeEyebrow.textContent = typeName;
-  if (selectedTypeTitle) selectedTypeTitle.textContent = `Run ${typeName}`;
+  const type = scrapeTypeDetail(slug);
+  scrapeTypeSelect.value = type.slug;
+  if (selectedTypeEyebrow) selectedTypeEyebrow.textContent = type.name;
+  if (selectedTypeTitle) selectedTypeTitle.textContent = `Run ${type.name}`;
   if (selectedTypeDescription) {
-    selectedTypeDescription.textContent = `${typeDescription} Paste a matching URL below and export the result to Excel.`;
+    selectedTypeDescription.textContent = `${type.description} Paste a matching URL below and export the result to Excel.`;
   }
+  if (selectedTypeUrlHint) selectedTypeUrlHint.textContent = type.urlHint;
+  if (selectedTypeFocus) selectedTypeFocus.textContent = type.fields;
+  if (primaryUrlInput) primaryUrlInput.placeholder = type.urlHint;
   const nextUrl = new URL(window.location.href);
-  nextUrl.searchParams.set("type", typeSlug);
+  nextUrl.searchParams.set("type", type.slug);
   window.history.replaceState({}, "", nextUrl);
 }
 
@@ -339,7 +345,7 @@ scrapeForms.forEach((form) => {
       const response = await fetch("/api/scrape", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: urlInput.value.trim(), mode }),
+        body: JSON.stringify({ url: urlInput.value.trim(), mode, scrape_type: scrapeTypeSelect?.value || "" }),
       });
       const start = await response.json();
       if (!response.ok || start.error) throw new Error(start.error || "Scrape failed");
@@ -366,30 +372,42 @@ scrapeForms.forEach((form) => {
 downloadButton.addEventListener("click", async () => {
   if (!scrapeData) return;
   downloadButton.disabled = true;
+  downloadButton.textContent = "Preparing...";
   setStatus("Preparing Excel file...");
   clearExportResult();
   try {
-    const response = await fetch("/api/export", {
+    const response = await fetch("/api/download", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ data: scrapeData }),
     });
-    const result = await response.json();
-    if (!response.ok || result.error) throw new Error(result.error || "Could not create Excel file");
+    if (!response.ok) {
+      const result = await response.json().catch(() => ({}));
+      throw new Error(result.error || "Could not create Excel file");
+    }
+    const contentDisposition = response.headers.get("Content-Disposition") || "";
+    const filenameMatch = contentDisposition.match(/filename="([^"]+)"/);
+    const filename = filenameMatch ? filenameMatch[1] : "datascrape-export.xlsx";
+    const workbook = await response.blob();
+    const downloadUrl = URL.createObjectURL(workbook);
+    const link = document.createElement("a");
+    link.href = downloadUrl;
+    link.download = filename;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
     exportResult.hidden = false;
     exportResult.innerHTML = `
-      <strong>Excel file saved locally</strong>
-      <div class="pathBox">${escapeHtml(result.saved_path)}</div>
-      <a href="${escapeAttr(result.download_url)}" target="_blank" rel="noreferrer" download="${escapeAttr(result.filename)}">
-        Try browser download: ${escapeHtml(result.filename)}
-      </a>
-      <span>The Codex in-app browser may block downloads, but the Excel file above has already been created on your Mac.</span>
+      <strong>Download started</strong>
+      <span>${escapeHtml(filename)} is being downloaded by your browser.</span>
     `;
-    setStatus("Excel file created and saved locally.");
+    setStatus("Excel download started.");
   } catch (error) {
     setStatus(error.message, true);
   } finally {
     downloadButton.disabled = false;
+    downloadButton.textContent = "Download";
   }
 });
 

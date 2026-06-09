@@ -197,7 +197,7 @@ def update_job(job_id, **updates):
         job["updated_at"] = time.time()
 
 
-def create_scrape_job(url, mode="auto", plan="free", user_email=""):
+def create_scrape_job(url, mode="auto", plan="free", user_email="", scrape_type=""):
     if mode not in {"auto", "website", "category"}:
         raise ValueError("Invalid scrape mode.")
     if plan == "category" and mode != "category":
@@ -210,6 +210,7 @@ def create_scrape_job(url, mode="auto", plan="free", user_email=""):
             "message": "Queued",
             "url": url,
             "mode": mode,
+            "scrape_type": scrape_type,
             "user_email": normalize_email(user_email),
             "created_at": time.time(),
             "updated_at": time.time(),
@@ -223,6 +224,7 @@ def create_scrape_job(url, mode="auto", plan="free", user_email=""):
         try:
             progress("Starting scrape...")
             data = extract_site_data(url, progress=progress, mode=mode)
+            data["scrape_type"] = scrape_type
             data = apply_plan_limit(data, plan)
             update_job(job_id, status="complete", message="Scrape complete.", data=data, counts=data.get("counts", {}))
         except Exception as exc:
@@ -2045,6 +2047,7 @@ class AppHandler(BaseHTTPRequestHandler):
                     payload.get("mode", "auto"),
                     plan,
                     user.get("email"),
+                    payload.get("scrape_type", ""),
                 )
                 if plan == "free":
                     increment_free_scrape(user.get("email"))

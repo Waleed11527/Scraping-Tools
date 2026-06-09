@@ -1762,7 +1762,8 @@ body.appBody {
 }
 
 .howToGrid article,
-.typePickerPanel {
+.typePickerPanel,
+.typeProfilePanel article {
   border: 1px solid var(--line);
   border-radius: 18px;
   background:
@@ -1823,6 +1824,50 @@ body.appBody {
   background: rgba(8, 8, 12, 0.72);
   color: var(--ink);
   font: inherit;
+}
+
+.typeProfilePanel {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.typeProfilePanel article {
+  min-height: 104px;
+  padding: 16px;
+}
+
+.typeProfilePanel span {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.typeProfilePanel strong {
+  color: var(--ink);
+  font-size: 16px;
+  line-height: 1.35;
+}
+
+.downloadButton {
+  min-height: 48px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent), var(--violet));
+  color: #fff;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 12px 32px rgba(99, 102, 241, 0.26);
+}
+
+.downloadButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
 .dashboardBand {
@@ -2071,6 +2116,7 @@ td a {
   .dashboardBand,
   .commandMeta,
   .typePickerPanel,
+  .typeProfilePanel,
   .howToGrid {
     display: grid;
     grid-template-columns: 1fr;
@@ -2146,6 +2192,7 @@ td a {
 .appBody[data-theme="light"] .dashboardBand,
 .appBody[data-theme="light"] .scraperCommand,
 .appBody[data-theme="light"] .typePickerPanel,
+.appBody[data-theme="light"] .typeProfilePanel article,
 .appBody[data-theme="light"] .howToGrid article,
 .appBody[data-theme="light"] .statusBar,
 .appBody[data-theme="light"] .tableWrap,
