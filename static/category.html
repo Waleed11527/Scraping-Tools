@@ -26,18 +26,13 @@
           <div><p class="eyebrow" id="selectedTypeEyebrow">Category scraper</p><h1 id="selectedTypeTitle">Capture every listing in one category</h1><p class="pageLead" id="selectedTypeDescription">Paste a category URL to collect product details, model numbers and all unique images.</p></div>
           <div class="topActions">
             <button id="accountButton" class="accountButton" type="button">Sign in</button>
-            <button id="downloadButton" class="downloadButton" disabled title="Download Excel" aria-label="Download Excel">Download</button>
+            <button id="downloadButton" class="iconButton" disabled title="Download Excel" aria-label="Download Excel">↓</button>
           </div>
         </header>
         <section class="typePickerPanel">
           <label for="scrapeTypeSelect">Scraping category</label>
           <select id="scrapeTypeSelect" class="typeSelect"></select>
           <a class="secondaryLink" href="/categories">View all categories</a>
-        </section>
-        <section class="typeProfilePanel">
-          <article><span>Best URL</span><strong id="selectedTypeUrlHint">Category URL</strong></article>
-          <article><span>Extraction focus</span><strong id="selectedTypeFocus">Listings, images, prices and metadata</strong></article>
-          <article><span>Result</span><strong>Excel workbook</strong></article>
         </section>
         <section class="scraperTypeStrip" aria-label="Extracted data types">
           <span>Listings</span><span>All images</span><span>Model numbers</span><span>Prices</span><span>Stock</span><span>Descriptions</span><span>Links</span><span>Metadata</span>

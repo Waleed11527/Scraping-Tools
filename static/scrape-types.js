@@ -33,41 +33,6 @@ const SCRAPE_TYPES = [
 
 window.SCRAPE_TYPES = SCRAPE_TYPES;
 
-const SCRAPE_TYPE_DETAILS = {
-  "static-web-scraping": ["Static page URL", "HTML title, headings, links, images, visible text"],
-  "dynamic-web-scraping": ["Dynamic listing URL", "Lazy-loaded cards, scroll results, images, links, prices"],
-  "api-scraping": ["API-backed page URL", "Structured product rows, JSON-like fields, API page counts"],
-  "browser-automation-scraping": ["Interactive page URL", "Buttons, filters, loaded listings, detail links"],
-  "screen-scraping": ["Visible content URL", "Visible text, image references, link labels, layout content"],
-  "cloud-web-scraping": ["Hosted scrape URL", "Online job results, Excel-ready rows, metadata"],
-  "ai-powered-web-scraping": ["Any data-rich URL", "Smart product fields, model numbers, descriptions, images"],
-  "mobile-web-scraping": ["Mobile/responsive URL", "Mobile cards, titles, prices, links, images"],
-  "html-parsing": ["HTML page URL", "Meta tags, title, headings, anchors, image sources"],
-  "dom-parsing": ["DOM-heavy page URL", "Repeated DOM cards, titles, prices, categories, links"],
-  "xpath-scraping": ["Structured page URL", "Repeated elements, detail links, labels, field-like values"],
-  "regex-scraping": ["Pattern-rich URL", "Prices, emails, IDs, SKU/model-like patterns"],
-  "ocr-scraping": ["Image-heavy page URL", "Image URLs, alt text, captions, visible image metadata"],
-  "real-time-web-scraping": ["Fresh listing URL", "Current titles, live prices, stock, updated links"],
-  "distributed-web-scraping": ["Large category URL", "Many listings, category counts, detail pages, exports"],
-  "incremental-web-scraping": ["Repeat scrape URL", "New listings, changed prices, current availability"],
-  "data-mining-scraping": ["Research URL", "Rows for analysis, links, metadata, descriptions"],
-  "ecommerce-scraping": ["Store category URL", "Product title, price, sale price, model number, images, stock"],
-  "social-media-scraping": ["Public social/content URL", "Post titles, profile links, images, public metadata"],
-  "search-engine-scraping": ["Search result URL", "Result titles, snippets, outbound links, metadata"],
-  "news-scraping": ["News/category URL", "Headlines, article links, thumbnails, dates, metadata"],
-  "email-scraping": ["Contact/listing URL", "Public emails, names, website links, page metadata"],
-  "price-monitoring-scraping": ["Product/category URL", "Current price, regular price, sale price, availability"],
-  "lead-generation-scraping": ["Business listing URL", "Business names, emails, links, descriptions, profile URLs"],
-  "job-board-scraping": ["Job board URL", "Job title, company, location, detail link, description"],
-  "real-estate-scraping": ["Property listing URL", "Property title, price, location, images, detail link"],
-  "pdf-data-document-scraping": ["Document listing URL", "PDF/document links, titles, file metadata, page links"],
-  "image-scraping": ["Gallery/listing URL", "Unique image URLs, alt text, titles, product image counts"],
-  "video-metadata-scraping": ["Video listing URL", "Video titles, thumbnails, links, page metadata"],
-  "web-crawling-scraping": ["Website or category URL", "Crawled links, listing rows, detail pages, metadata"],
-};
-
-window.SCRAPE_TYPE_DETAILS = SCRAPE_TYPE_DETAILS;
-
 function scrapeTypeHref(slug) {
   return `/category?type=${encodeURIComponent(slug)}`;
 }
@@ -75,14 +40,6 @@ function scrapeTypeHref(slug) {
 function findScrapeType(slug) {
   return SCRAPE_TYPES.find(([value]) => value === slug) || SCRAPE_TYPES[0];
 }
-
-function scrapeTypeDetail(slug) {
-  const [value, name, description] = findScrapeType(slug);
-  const [urlHint, fields] = SCRAPE_TYPE_DETAILS[value] || ["Target URL", "Titles, links, images, metadata, details"];
-  return { slug: value, name, description, urlHint, fields };
-}
-
-window.scrapeTypeDetail = scrapeTypeDetail;
 
 function renderScrapeTypeCards(container, options = {}) {
   if (!container) return;
